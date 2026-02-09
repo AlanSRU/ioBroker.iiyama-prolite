@@ -1,0 +1,103 @@
+{
+	"i18n": true,
+	"type": "panel",
+	"items": {
+		"connectionType": {
+			"type": "select",
+			"label": "Connection Type",
+			"options": [
+				{
+					"label": "TCP/IP (LAN)",
+					"value": "tcp"
+				},
+				{
+					"label": "Serial (RS232)",
+					"value": "serial"
+				}
+			],
+			"newLine": true
+		},
+		"host": {
+			"type": "text",
+			"label": "IP Address",
+			"hidden": "data.connectionType !== 'tcp'",
+			"newLine": true
+		},
+		"port": {
+			"type": "number",
+			"label": "TCP Port",
+			"hidden": "data.connectionType !== 'tcp'",
+			"min": 1,
+			"max": 65535
+		},
+		"macAddress": {
+			"type": "text",
+			"label": "MAC Address (for Wake-on-LAN)",
+			"placeholder": "AA:BB:CC:DD:EE:FF",
+			"hidden": "data.connectionType !== 'tcp'",
+			"help": "MAC address of the display for Wake-on-LAN when powering on from standby"
+		},
+		"powerSaveMode": {
+			"type": "select",
+			"label": "Power Save Mode",
+			"hidden": "data.connectionType !== 'tcp'",
+			"newLine": true,
+			"options": [
+				{
+					"label": "Mode 1: TCP off when display off, WOL enabled",
+					"value": 1
+				},
+				{
+					"label": "Mode 2: TCP off when display off, WOL enabled, auto on/off",
+					"value": 2
+				},
+				{
+					"label": "Mode 3: TCP always on, WOL disabled, auto on/off",
+					"value": 3
+				},
+				{
+					"label": "Mode 4: TCP always on, WOL disabled",
+					"value": 4
+				}
+			],
+			"help": "Must match the Power Save mode configured on the display. Mode 1/2 require WOL to wake display, Mode 3/4 use TCP commands."
+		},
+		"serialPort": {
+			"type": "text",
+			"label": "Serial Port",
+			"placeholder": "/dev/ttyUSB0 or COM1",
+			"hidden": "data.connectionType !== 'serial'",
+			"newLine": true
+		},
+		"baudRate": {
+			"type": "select",
+			"label": "Baud Rate",
+			"options": [
+				{
+					"label": "9600",
+					"value": 9600
+				},
+				{
+					"label": "115200 (LHxx42UHS-B1 series)",
+					"value": 115200
+				}
+			],
+			"hidden": "data.connectionType !== 'serial'"
+		},
+		"monitorId": {
+			"type": "number",
+			"label": "Monitor ID",
+			"min": 1,
+			"max": 255,
+			"newLine": true,
+			"help": "Monitor ID (1-255) as configured on the display"
+		},
+		"pollInterval": {
+			"type": "number",
+			"label": "Poll Interval (seconds)",
+			"min": 5,
+			"max": 300,
+			"help": "Interval for polling display status"
+		}
+	}
+}

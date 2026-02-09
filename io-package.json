@@ -1,0 +1,91 @@
+{
+	"common": {
+		"name": "iiyama",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"uk": "Початкова версія",
+				"zh-cn": "首次出版"
+			}
+		},
+		"titleLang": {
+			"en": "Iiyama Display",
+			"de": "Iiyama-Anzeige",
+			"ru": "Иияма Дисплей",
+			"pt": "Exibição de Iiyama",
+			"nl": "Iiyama-vertoning",
+			"fr": "Affichage Iiyama",
+			"it": "Visualizzazione Iiyama",
+			"es": "Pantalla Iiyama",
+			"pl": "Wyświetlacz Iiyamy",
+			"uk": "Дисплей Iiyama",
+			"zh-cn": "饭山显示器"
+		},
+		"desc": {
+			"en": "Iiyama Display Adapter",
+			"de": "Iiyama-Anzeigeadapter",
+			"ru": "Адаптер дисплея Iiyama",
+			"pt": "Adaptador de vídeo Iiyama",
+			"nl": "Iiyama-beeldschermadapter",
+			"fr": "Adaptateur d'affichage Iiyama",
+			"it": "Adattatore display Iiyama",
+			"es": "Adaptador de pantalla Iiyama",
+			"pl": "Adapter wyświetlacza Iiyama",
+			"uk": "Дисплейний адаптер Iiyama",
+			"zh-cn": "饭山显示适配器"
+		},
+		"authors": ["Alan Paris <alan.paris@scottish.rugby>"],
+		"keywords": ["iiyama", "display", "adapter"],
+		"licenseInformation": {
+			"type": "free",
+			"license": "MIT"
+		},
+		"platform": "Javascript/Node.js",
+		"icon": "iiyama.png",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/Scottish Rugby/ioBroker.iiyama/main/admin/iiyama.png",
+		"readme": "https://github.com/Scottish Rugby/ioBroker.iiyama/blob/main/README.md",
+		"loglevel": "info",
+		"tier": 3,
+		"mode": "daemon",
+		"type": "multimedia",
+		"compact": true,
+		"connectionType": "local",
+		"dataSource": "poll",
+		"adminUI": {
+			"config": "json"
+		},
+		"dependencies": [
+			{
+				"js-controller": ">=6.0.11"
+			}
+		],
+		"globalDependencies": [
+			{
+				"admin": ">=7.0.23"
+			}
+		]
+	},
+	"native": {
+		"connectionType": "tcp",
+		"host": "192.168.1.100",
+		"port": 5000,
+		"macAddress": "",
+		"serialPort": "/dev/ttyUSB0",
+		"baudRate": 9600,
+		"monitorId": 1,
+		"pollInterval": 30,
+		"powerSaveMode": 1
+	},
+	"objects": [],
+	"instanceObjects": []
+}
