@@ -1,12 +1,12 @@
-![Logo](admin/iiyama.png)
-# ioBroker.iiyama
+![Logo](admin/iiyama-prolite.png)
+# ioBroker.iiyama-prolite
 
-[![NPM version](https://img.shields.io/npm/v/iobroker.iiyama.svg)](https://www.npmjs.com/package/iobroker.iiyama)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.iiyama.svg)](https://www.npmjs.com/package/iobroker.iiyama)
-![Number of Installations](https://iobroker.live/badges/iiyama-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/iiyama-stable.svg)
+[![NPM version](https://img.shields.io/npm/v/iobroker.iiyama-prolite.svg)](https://www.npmjs.com/package/iobroker.iiyama-prolite)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.iiyama-prolite.svg)](https://www.npmjs.com/package/iobroker.iiyama-prolite)
+![Number of Installations](https://iobroker.live/badges/iiyama-prolite-installed.svg)
+![Current version in stable repository](https://iobroker.live/badges/iiyama-prolite-stable.svg)
 
-**Tests:** ![Test and Release](https://github.com/AlanSRU/ioBroker.iiyama/workflows/Test%20and%20Release/badge.svg)
+**Tests:** ![Test and Release](https://github.com/AlanSRU/ioBroker.iiyama-prolite/workflows/Test%20and%20Release/badge.svg)
 
 ## iiyama adapter for ioBroker
 
@@ -125,17 +125,17 @@ Control [iiyama ProLite](https://iiyama.com/gl_en/products/) professional displa
 
 ```javascript
 // Turn display on
-setState('iiyama.0.power', true);
+setState('iiyama-prolite.0.power', true);
 
 // Switch to HDMI input
-setState('iiyama.0.inputSource', 13); // 13 = HDMI
+setState('iiyama-prolite.0.inputSource', 13); // 13 = HDMI
 
 // Set volume to 50%
-setState('iiyama.0.volume.main', 50);
-setState('iiyama.0.volume.audioOut', 50);
+setState('iiyama-prolite.0.volume.main', 50);
+setState('iiyama-prolite.0.volume.audioOut', 50);
 
 // Adjust brightness
-setState('iiyama.0.video.brightness', 75);
+setState('iiyama-prolite.0.video.brightness', 75);
 ```
 
 ## Technical Details

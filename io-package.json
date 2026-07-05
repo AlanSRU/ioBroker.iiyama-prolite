@@ -1,6 +1,6 @@
 {
 	"common": {
-		"name": "iiyama",
+		"name": "iiyama-prolite",
 		"version": "0.1.0",
 		"news": {
 			"0.1.0": {
@@ -58,10 +58,10 @@
 			"license": "MIT"
 		},
 		"platform": "Javascript/Node.js",
-		"icon": "iiyama.png",
+		"icon": "iiyama-prolite.png",
 		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/AlanSRU/ioBroker.iiyama/main/admin/iiyama.png",
-		"readme": "https://github.com/AlanSRU/ioBroker.iiyama/blob/main/README.md",
+		"extIcon": "https://raw.githubusercontent.com/AlanSRU/ioBroker.iiyama-prolite/main/admin/iiyama-prolite.png",
+		"readme": "https://github.com/AlanSRU/ioBroker.iiyama-prolite/blob/main/README.md",
 		"loglevel": "info",
 		"tier": 3,
 		"mode": "daemon",
