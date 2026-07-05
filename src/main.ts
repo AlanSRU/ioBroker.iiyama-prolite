@@ -94,6 +94,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Connection status',
 				type: 'boolean',
+				def: false,
 				role: 'indicator.connected',
 				read: true,
 				write: false,
@@ -107,6 +108,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Display in standby',
 				type: 'boolean',
+				def: false,
 				role: 'indicator',
 				read: true,
 				write: false,
@@ -120,6 +122,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Power',
 				type: 'boolean',
+				def: false,
 				role: 'switch.power',
 				read: true,
 				write: true,
@@ -133,6 +136,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Input Source',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -158,6 +162,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Main Volume',
 				type: 'number',
+				def: 0,
 				role: 'level.volume',
 				read: true,
 				write: true,
@@ -173,6 +178,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Audio Out Volume',
 				type: 'number',
+				def: 0,
 				role: 'level.volume',
 				read: true,
 				write: true,
@@ -189,6 +195,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Brightness',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -204,6 +211,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Contrast',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -219,6 +227,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Color',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -234,6 +243,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Sharpness',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -249,6 +259,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Tint',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -264,6 +275,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Black Level',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -279,6 +291,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Gamma',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -299,6 +312,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Color Temperature',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -324,6 +338,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Picture Format',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -346,6 +361,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Treble',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -360,6 +376,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Bass',
 				type: 'number',
+				def: 0,
 				role: 'level',
 				read: true,
 				write: true,
@@ -375,6 +392,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Operating Hours',
 				type: 'number',
+				def: 0,
 				role: 'value',
 				read: true,
 				write: false,
@@ -388,6 +406,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Serial Code',
 				type: 'string',
+				def: '',
 				role: 'text',
 				read: true,
 				write: false,
@@ -401,6 +420,7 @@ class Iiyama extends utils.Adapter {
 			common: {
 				name: 'Auto Adjust (VGA only)',
 				type: 'boolean',
+				def: false,
 				role: 'button',
 				read: false,
 				write: true,
