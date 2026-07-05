@@ -393,7 +393,7 @@ class Iiyama extends utils.Adapter {
           serialPort: this.config.serialPort,
           baudRate: this.config.baudRate
         },
-        this.log
+        this
       );
       this.connection.on("connected", () => {
         this.log.info("Connected to display");

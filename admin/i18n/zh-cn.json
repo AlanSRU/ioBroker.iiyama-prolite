@@ -1,5 +1,7 @@
 {
+	"/dev/ttyUSB0 or COM1": "/dev/ttyUSB0 或 COM1",
 	"115200 (LHxx42UHS-B1 series)": "115200（LHxx42UHS-B1系列）",
+	"AA:BB:CC:DD:EE:FF": "AA:BB:CC:DD:EE:FF",
 	"Baud Rate": "波特率",
 	"Connection Type": "连接类型",
 	"IP Address": "IP地址",
@@ -21,7 +23,5 @@
 	"TCP Port": "TCP端口",
 	"TCP/IP (LAN)": "TCP/IP（局域网）",
 	"WOL Broadcast Address": "网络唤醒广播地址",
-	"iiyama adapter settings": "iiyama的适配器设置",
-	"option1": "选项1",
-	"option2": "选项2"
+	"e.g. 192.168.1.255": "例如192.168.1.255"
 }

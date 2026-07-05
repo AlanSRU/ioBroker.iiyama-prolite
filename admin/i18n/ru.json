@@ -1,5 +1,7 @@
 {
+	"/dev/ttyUSB0 or COM1": "/dev/ttyUSB0 или COM1",
 	"115200 (LHxx42UHS-B1 series)": "115200 (серия LHxx42UHS-B1)",
+	"AA:BB:CC:DD:EE:FF": "АА:BB:CC:DD:EE:FF",
 	"Baud Rate": "Скорость передачи данных",
 	"Connection Type": "Тип подключения",
 	"IP Address": "IP-адрес",
@@ -21,7 +23,5 @@
 	"TCP Port": "TCP-порт",
 	"TCP/IP (LAN)": "TCP/IP (ЛВС)",
 	"WOL Broadcast Address": "Адрес трансляции WOL",
-	"iiyama adapter settings": "Настройки адаптера для iiyama",
-	"option1": "вариант 1",
-	"option2": "вариант 2"
+	"e.g. 192.168.1.255": "например 192.168.1.255"
 }
