@@ -1,5 +1,5 @@
 {
-  "name": "iobroker.iiyama",
+  "name": "iobroker.iiyama-prolite",
   "version": "0.1.0",
   "description": "Iiyama Display Adapter",
   "author": {
@@ -7,7 +7,7 @@
     "email": "alan.paris@scottish.rugby"
   },
   "contributors": [],
-  "homepage": "https://github.com/AlanSRU/ioBroker.iiyama",
+  "homepage": "https://github.com/AlanSRU/ioBroker.iiyama-prolite",
   "license": "MIT",
   "keywords": [
     "ioBroker",
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/AlanSRU/ioBroker.iiyama.git"
+    "url": "https://github.com/AlanSRU/ioBroker.iiyama-prolite.git"
   },
   "engines": {
     "node": ">= 22"
@@ -70,7 +70,7 @@
     "dev-server": "dev-server"
   },
   "bugs": {
-    "url": "https://github.com/AlanSRU/ioBroker.iiyama/issues"
+    "url": "https://github.com/AlanSRU/ioBroker.iiyama-prolite/issues"
   },
   "readmeFilename": "README.md"
 }

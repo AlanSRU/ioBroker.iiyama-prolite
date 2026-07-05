@@ -35,7 +35,7 @@ class Iiyama extends utils.Adapter {
   constructor(options = {}) {
     super({
       ...options,
-      name: "iiyama"
+      name: "iiyama-prolite"
     });
     this.on("ready", this.onReady.bind(this));
     this.on("stateChange", this.onStateChange.bind(this));
