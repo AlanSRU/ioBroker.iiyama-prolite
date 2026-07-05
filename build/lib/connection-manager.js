@@ -36,23 +36,25 @@ var net = __toESM(require("node:net"));
 var import_serialport = require("serialport");
 var import_iiyama_protocol = require("./iiyama-protocol");
 class ConnectionManager extends import_node_events.EventEmitter {
-  constructor(config, log) {
+  constructor(config, adapter) {
     super();
     this.config = config;
-    this.log = log;
+    this.adapter = adapter;
+    this.log = adapter.log;
   }
   client = null;
   connected = false;
   buffer = Buffer.alloc(0);
-  responseTimeout = null;
-  reconnectTimeout = null;
-  standbyPollTimeout = null;
+  responseTimeout;
+  reconnectTimeout;
+  standbyPollTimeout;
   reconnectAttempts = 0;
   maxReconnectAttempts = 10;
   reconnectDelay = 5e3;
   standbyPollInterval = 3e4;
   // Check every 30s if display came back
   autoReconnectEnabled = true;
+  log;
   /**
    * Enable or disable auto-reconnect
    *
@@ -61,8 +63,8 @@ class ConnectionManager extends import_node_events.EventEmitter {
   setAutoReconnect(enabled) {
     this.autoReconnectEnabled = enabled;
     if (!enabled && this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+      this.adapter.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = void 0;
     }
   }
   /**
@@ -220,14 +222,14 @@ class ConnectionManager extends import_node_events.EventEmitter {
       if (waitForResponse) {
         const onResponse = (response) => {
           if (this.responseTimeout) {
-            clearTimeout(this.responseTimeout);
-            this.responseTimeout = null;
+            this.adapter.clearTimeout(this.responseTimeout);
+            this.responseTimeout = void 0;
           }
           this.removeListener("response", onResponse);
           resolve(response);
         };
         this.once("response", onResponse);
-        this.responseTimeout = setTimeout(() => {
+        this.responseTimeout = this.adapter.setTimeout(() => {
           this.log.error("Response timeout! No valid response received within 5000ms");
           this.log.error(`Current buffer: ${this.buffer.toString("hex")} (${this.buffer.length} bytes)`);
           this.removeListener("response", onResponse);
@@ -239,8 +241,8 @@ class ConnectionManager extends import_node_events.EventEmitter {
         this.client.write(command, (error) => {
           if (error) {
             if (this.responseTimeout) {
-              clearTimeout(this.responseTimeout);
-              this.responseTimeout = null;
+              this.adapter.clearTimeout(this.responseTimeout);
+              this.responseTimeout = void 0;
             }
             reject(error);
           } else if (!waitForResponse) {
@@ -251,8 +253,8 @@ class ConnectionManager extends import_node_events.EventEmitter {
         this.client.write(command, (error) => {
           if (error) {
             if (this.responseTimeout) {
-              clearTimeout(this.responseTimeout);
-              this.responseTimeout = null;
+              this.adapter.clearTimeout(this.responseTimeout);
+              this.responseTimeout = void 0;
             }
             reject(error);
           } else if (!waitForResponse) {
@@ -269,8 +271,8 @@ class ConnectionManager extends import_node_events.EventEmitter {
     const wasConnected = this.connected;
     this.connected = false;
     if (this.responseTimeout) {
-      clearTimeout(this.responseTimeout);
-      this.responseTimeout = null;
+      this.adapter.clearTimeout(this.responseTimeout);
+      this.responseTimeout = void 0;
     }
     if (wasConnected) {
       this.emit("disconnected");
@@ -278,7 +280,7 @@ class ConnectionManager extends import_node_events.EventEmitter {
     if (this.autoReconnectEnabled && this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       this.emit("reconnecting", this.reconnectAttempts);
-      this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = this.adapter.setTimeout(() => {
         this.connect().catch(() => {
         });
       }, this.reconnectDelay);
@@ -293,7 +295,7 @@ class ConnectionManager extends import_node_events.EventEmitter {
    */
   startStandbyPolling() {
     this.stopStandbyPolling();
-    this.standbyPollTimeout = setInterval(() => {
+    this.standbyPollTimeout = this.adapter.setInterval(() => {
       if (this.connected) {
         this.stopStandbyPolling();
         return;
@@ -309,8 +311,8 @@ class ConnectionManager extends import_node_events.EventEmitter {
    */
   stopStandbyPolling() {
     if (this.standbyPollTimeout) {
-      clearInterval(this.standbyPollTimeout);
-      this.standbyPollTimeout = null;
+      this.adapter.clearInterval(this.standbyPollTimeout);
+      this.standbyPollTimeout = void 0;
     }
   }
   /**
@@ -319,12 +321,12 @@ class ConnectionManager extends import_node_events.EventEmitter {
   disconnect() {
     this.stopStandbyPolling();
     if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+      this.adapter.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = void 0;
     }
     if (this.responseTimeout) {
-      clearTimeout(this.responseTimeout);
-      this.responseTimeout = null;
+      this.adapter.clearTimeout(this.responseTimeout);
+      this.responseTimeout = void 0;
     }
     if (this.client) {
       if (this.config.type === "tcp") {

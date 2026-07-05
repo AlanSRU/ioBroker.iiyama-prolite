@@ -1,8 +1,22 @@
 {
 	"common": {
 		"name": "iiyama",
-		"version": "0.0.1",
-		"news": {},
+		"version": "0.1.0",
+		"news": {
+			"0.1.0": {
+				"en": "Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays with power, input, volume, video/audio control, status polling and Wake-on-LAN support",
+				"de": "Erstveröffentlichung: TCP/IP- und serielle (RS232)-Steuerung von iiyama ProLite-Displays mit Stromversorgung, Eingang, Lautstärke, Video-/Audiosteuerung, Statusabfrage und Wake-on-LAN-Unterstützung",
+				"ru": "Первоначальная версия: TCP/IP и последовательное (RS232) управление дисплеями iiyama ProLite с управлением питанием, входом, громкостью, видео/аудио, опросом состояния и поддержкой Wake-on-LAN.",
+				"pt": "Versão inicial: controle TCP/IP e serial (RS232) dos monitores iiyama ProLite com alimentação, entrada, volume, controle de vídeo/áudio, pesquisa de status e suporte Wake-on-LAN",
+				"nl": "Eerste release: TCP/IP en seriële (RS232) bediening van iiyama ProLite-schermen met voeding, invoer, volume, video-/audiobediening, status polling en Wake-on-LAN-ondersteuning",
+				"fr": "Version initiale : contrôle TCP/IP et série (RS232) des écrans iiyama ProLite avec alimentation, entrée, volume, contrôle vidéo/audio, interrogation d'état et prise en charge Wake-on-LAN",
+				"it": "Versione iniziale: controllo TCP/IP e seriale (RS232) dei display iiyama ProLite con alimentazione, ingresso, volume, controllo video/audio, polling dello stato e supporto Wake-on-LAN",
+				"es": "Lanzamiento inicial: control TCP/IP y serie (RS232) de pantallas iiyama ProLite con control de alimentación, entrada, volumen, vídeo/audio, sondeo de estado y compatibilidad con Wake-on-LAN.",
+				"pl": "Wersja pierwsza: sterowanie wyświetlaczami iiyama ProLite za pomocą protokołu TCP/IP i portu szeregowego (RS232) z zasilaniem, wejściem, głośnością, sterowaniem wideo/audio, odpytywaniem stanu i obsługą Wake-on-LAN",
+				"uk": "Початковий випуск: TCP/IP і послідовне (RS232) керування дисплеями iiyama ProLite з живленням, вхідним сигналом, гучністю, керуванням відео/аудіо, опитуванням стану та підтримкою Wake-on-LAN",
+				"zh-cn": "初始版本：对 iiyama ProLite 显示器进行 TCP/IP 和串行 (RS232) 控制，具有电源、输入、音量、视频/音频控制、状态轮询和 LAN 唤醒支持"
+			}
+		},
 		"titleLang": {
 			"en": "Iiyama Display",
 			"de": "Iiyama-Anzeige",
@@ -34,8 +48,10 @@
 		],
 		"keywords": [
 			"iiyama",
+			"prolite",
 			"display",
-			"adapter"
+			"signage",
+			"rs232"
 		],
 		"licenseInformation": {
 			"type": "free",

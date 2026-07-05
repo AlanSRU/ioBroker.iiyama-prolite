@@ -32,6 +32,7 @@ __export(wake_on_lan_exports, {
 });
 module.exports = __toCommonJS(wake_on_lan_exports);
 var dgram = __toESM(require("node:dgram"));
+var import_promises = require("node:timers/promises");
 class WakeOnLan {
   /**
    * Send Wake-on-LAN magic packets to wake up a device.
@@ -50,7 +51,7 @@ class WakeOnLan {
       for (let i = 0; i < sendCount; i++) {
         await this.sendPacket(magicPacket, broadcastAddress, port);
         if (i < sendCount - 1) {
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          await (0, import_promises.setTimeout)(delayMs);
         }
       }
     }

@@ -3,6 +3,7 @@
  */
 
 import * as dgram from 'node:dgram';
+import { setTimeout as delay } from 'node:timers/promises';
 
 export class WakeOnLan {
 	/**
@@ -25,7 +26,7 @@ export class WakeOnLan {
 			for (let i = 0; i < sendCount; i++) {
 				await this.sendPacket(magicPacket, broadcastAddress, port);
 				if (i < sendCount - 1) {
-					await new Promise(resolve => setTimeout(resolve, delayMs));
+					await delay(delayMs);
 				}
 			}
 		}

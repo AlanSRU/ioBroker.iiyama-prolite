@@ -189,6 +189,8 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	### __WORK IN PROGRESS__
 -->
 ### __WORK IN PROGRESS__
+
+### 0.1.0 (2026-07-05)
 * (Alan Paris) Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays
 * (Alan Paris) Power, input source, volume, video and audio control with status polling
 * (Alan Paris) Wake-on-LAN support for Power Save Modes 3 and 4, with subnet-broadcast derivation
