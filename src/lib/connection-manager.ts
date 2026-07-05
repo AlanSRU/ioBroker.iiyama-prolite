@@ -29,13 +29,10 @@ export interface Logger {
  * Injecting the adapter lets us use its framework-managed timers, which are
  * cleared automatically on unload.
  */
-export interface AdapterLike {
-	log: Logger;
-	setTimeout(cb: () => void, ms: number): ioBroker.Timeout | undefined;
-	clearTimeout(timer: ioBroker.Timeout | undefined): void;
-	setInterval(cb: () => void, ms: number): ioBroker.Interval | undefined;
-	clearInterval(timer: ioBroker.Interval | undefined): void;
-}
+export type AdapterLike = Pick<
+	ioBroker.Adapter,
+	'log' | 'setTimeout' | 'clearTimeout' | 'setInterval' | 'clearInterval'
+>;
 
 export class ConnectionManager extends EventEmitter {
 	private client: net.Socket | SerialPort | null = null;
