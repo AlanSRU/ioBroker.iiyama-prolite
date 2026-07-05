@@ -188,7 +188,7 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	Placeholder for the next version (at the beginning of the line):
 	### __WORK IN PROGRESS__
 -->
-### __WORK IN PROGRESS__
+### 0.1.1 (2026-07-05)
 * (Alan Paris) Enabled automated npm publishing via GitHub Actions trusted publishing (OIDC)
 
 ### 0.1.0 (2026-07-05)

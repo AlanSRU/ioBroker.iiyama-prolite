@@ -1,6 +1,6 @@
 {
   "name": "iobroker.iiyama-prolite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Iiyama Display Adapter",
   "author": {
     "name": "Alan Paris",

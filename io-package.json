@@ -1,100 +1,113 @@
 {
-	"common": {
-		"name": "iiyama-prolite",
-		"version": "0.1.0",
-		"news": {
-			"0.1.0": {
-				"en": "Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays with power, input, volume, video/audio control, status polling and Wake-on-LAN support",
-				"de": "Erstveröffentlichung: TCP/IP- und serielle (RS232)-Steuerung von iiyama ProLite-Displays mit Stromversorgung, Eingang, Lautstärke, Video-/Audiosteuerung, Statusabfrage und Wake-on-LAN-Unterstützung",
-				"ru": "Первоначальная версия: TCP/IP и последовательное (RS232) управление дисплеями iiyama ProLite с управлением питанием, входом, громкостью, видео/аудио, опросом состояния и поддержкой Wake-on-LAN.",
-				"pt": "Versão inicial: controle TCP/IP e serial (RS232) dos monitores iiyama ProLite com alimentação, entrada, volume, controle de vídeo/áudio, pesquisa de status e suporte Wake-on-LAN",
-				"nl": "Eerste release: TCP/IP en seriële (RS232) bediening van iiyama ProLite-schermen met voeding, invoer, volume, video-/audiobediening, status polling en Wake-on-LAN-ondersteuning",
-				"fr": "Version initiale : contrôle TCP/IP et série (RS232) des écrans iiyama ProLite avec alimentation, entrée, volume, contrôle vidéo/audio, interrogation d'état et prise en charge Wake-on-LAN",
-				"it": "Versione iniziale: controllo TCP/IP e seriale (RS232) dei display iiyama ProLite con alimentazione, ingresso, volume, controllo video/audio, polling dello stato e supporto Wake-on-LAN",
-				"es": "Lanzamiento inicial: control TCP/IP y serie (RS232) de pantallas iiyama ProLite con control de alimentación, entrada, volumen, vídeo/audio, sondeo de estado y compatibilidad con Wake-on-LAN.",
-				"pl": "Wersja pierwsza: sterowanie wyświetlaczami iiyama ProLite za pomocą protokołu TCP/IP i portu szeregowego (RS232) z zasilaniem, wejściem, głośnością, sterowaniem wideo/audio, odpytywaniem stanu i obsługą Wake-on-LAN",
-				"uk": "Початковий випуск: TCP/IP і послідовне (RS232) керування дисплеями iiyama ProLite з живленням, вхідним сигналом, гучністю, керуванням відео/аудіо, опитуванням стану та підтримкою Wake-on-LAN",
-				"zh-cn": "初始版本：对 iiyama ProLite 显示器进行 TCP/IP 和串行 (RS232) 控制，具有电源、输入、音量、视频/音频控制、状态轮询和 LAN 唤醒支持"
-			}
-		},
-		"titleLang": {
-			"en": "Iiyama Display",
-			"de": "Iiyama-Anzeige",
-			"ru": "Иияма Дисплей",
-			"pt": "Exibição de Iiyama",
-			"nl": "Iiyama-vertoning",
-			"fr": "Affichage Iiyama",
-			"it": "Visualizzazione Iiyama",
-			"es": "Pantalla Iiyama",
-			"pl": "Wyświetlacz Iiyamy",
-			"uk": "Дисплей Iiyama",
-			"zh-cn": "饭山显示器"
-		},
-		"desc": {
-			"en": "Iiyama Display Adapter",
-			"de": "Iiyama-Anzeigeadapter",
-			"ru": "Адаптер дисплея Iiyama",
-			"pt": "Adaptador de vídeo Iiyama",
-			"nl": "Iiyama-beeldschermadapter",
-			"fr": "Adaptateur d'affichage Iiyama",
-			"it": "Adattatore display Iiyama",
-			"es": "Adaptador de pantalla Iiyama",
-			"pl": "Adapter wyświetlacza Iiyama",
-			"uk": "Дисплейний адаптер Iiyama",
-			"zh-cn": "饭山显示适配器"
-		},
-		"authors": [
-			"Alan Paris <alan.paris@scottish.rugby>"
-		],
-		"keywords": [
-			"iiyama",
-			"prolite",
-			"display",
-			"signage",
-			"rs232"
-		],
-		"licenseInformation": {
-			"type": "free",
-			"license": "MIT"
-		},
-		"platform": "Javascript/Node.js",
-		"icon": "iiyama-prolite.png",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/AlanSRU/ioBroker.iiyama-prolite/main/admin/iiyama-prolite.png",
-		"readme": "https://github.com/AlanSRU/ioBroker.iiyama-prolite/blob/main/README.md",
-		"loglevel": "info",
-		"tier": 3,
-		"mode": "daemon",
-		"type": "multimedia",
-		"compact": true,
-		"connectionType": "local",
-		"dataSource": "poll",
-		"adminUI": {
-			"config": "json"
-		},
-		"dependencies": [
-			{
-				"js-controller": ">=6.0.11"
-			}
-		],
-		"globalDependencies": [
-			{
-				"admin": ">=7.6.20"
-			}
-		]
-	},
-	"native": {
-		"connectionType": "tcp",
-		"host": "192.168.1.100",
-		"port": 5000,
-		"macAddress": "",
-		"broadcastAddress": "",
-		"serialPort": "/dev/ttyUSB0",
-		"baudRate": 9600,
-		"monitorId": 1,
-		"pollInterval": 30,
-		"powerSaveMode": 1
-	},
-	"objects": [],
-	"instanceObjects": []
+  "common": {
+    "name": "iiyama-prolite",
+    "version": "0.1.1",
+    "news": {
+      "0.1.1": {
+        "en": "Enabled automated npm publishing via GitHub Actions trusted publishing (OIDC)",
+        "de": "Automatisierte npm-Veröffentlichung über GitHub Actions Trusted Publishing (OIDC) aktiviert",
+        "ru": "Включена автоматическая публикация npm через доверенную публикацию GitHub Actions (OIDC).",
+        "pt": "A publicação automatizada do npm foi ativada por meio da publicação confiável do GitHub Actions (OIDC).",
+        "nl": "Geautomatiseerde npm-publicatie ingeschakeld via GitHub Actions Trusted Publishing (OIDC).",
+        "fr": "Activation de la publication automatisée de npm via la publication de confiance GitHub Actions (OIDC)",
+        "it": "Pubblicazione automatizzata di npm abilitata tramite pubblicazione affidabile di GitHub Actions (OIDC)",
+        "es": "Se habilitó la publicación automatizada de npm a través de la publicación segura de GitHub Actions (OIDC).",
+        "pl": "Włączono automatyczne publikowanie npm za pośrednictwem zaufanego publikowania GitHub Actions (OIDC)",
+        "uk": "Увімкнено автоматичну публікацію npm через GitHub Actions, довірену публікацію (OIDC).",
+        "zh-cn": "已通过 GitHub Actions 可信发布 (OIDC) 启用 npm 自动发布"
+      },
+      "0.1.0": {
+        "en": "Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays with power, input, volume, video/audio control, status polling and Wake-on-LAN support",
+        "de": "Erstveröffentlichung: TCP/IP- und serielle (RS232)-Steuerung von iiyama ProLite-Displays mit Stromversorgung, Eingang, Lautstärke, Video-/Audiosteuerung, Statusabfrage und Wake-on-LAN-Unterstützung",
+        "ru": "Первоначальная версия: TCP/IP и последовательное (RS232) управление дисплеями iiyama ProLite с управлением питанием, входом, громкостью, видео/аудио, опросом состояния и поддержкой Wake-on-LAN.",
+        "pt": "Versão inicial: controle TCP/IP e serial (RS232) dos monitores iiyama ProLite com alimentação, entrada, volume, controle de vídeo/áudio, pesquisa de status e suporte Wake-on-LAN",
+        "nl": "Eerste release: TCP/IP en seriële (RS232) bediening van iiyama ProLite-schermen met voeding, invoer, volume, video-/audiobediening, status polling en Wake-on-LAN-ondersteuning",
+        "fr": "Version initiale : contrôle TCP/IP et série (RS232) des écrans iiyama ProLite avec alimentation, entrée, volume, contrôle vidéo/audio, interrogation d'état et prise en charge Wake-on-LAN",
+        "it": "Versione iniziale: controllo TCP/IP e seriale (RS232) dei display iiyama ProLite con alimentazione, ingresso, volume, controllo video/audio, polling dello stato e supporto Wake-on-LAN",
+        "es": "Lanzamiento inicial: control TCP/IP y serie (RS232) de pantallas iiyama ProLite con control de alimentación, entrada, volumen, vídeo/audio, sondeo de estado y compatibilidad con Wake-on-LAN.",
+        "pl": "Wersja pierwsza: sterowanie wyświetlaczami iiyama ProLite za pomocą protokołu TCP/IP i portu szeregowego (RS232) z zasilaniem, wejściem, głośnością, sterowaniem wideo/audio, odpytywaniem stanu i obsługą Wake-on-LAN",
+        "uk": "Початковий випуск: TCP/IP і послідовне (RS232) керування дисплеями iiyama ProLite з живленням, вхідним сигналом, гучністю, керуванням відео/аудіо, опитуванням стану та підтримкою Wake-on-LAN",
+        "zh-cn": "初始版本：对 iiyama ProLite 显示器进行 TCP/IP 和串行 (RS232) 控制，具有电源、输入、音量、视频/音频控制、状态轮询和 LAN 唤醒支持"
+      }
+    },
+    "titleLang": {
+      "en": "Iiyama Display",
+      "de": "Iiyama-Anzeige",
+      "ru": "Иияма Дисплей",
+      "pt": "Exibição de Iiyama",
+      "nl": "Iiyama-vertoning",
+      "fr": "Affichage Iiyama",
+      "it": "Visualizzazione Iiyama",
+      "es": "Pantalla Iiyama",
+      "pl": "Wyświetlacz Iiyamy",
+      "uk": "Дисплей Iiyama",
+      "zh-cn": "饭山显示器"
+    },
+    "desc": {
+      "en": "Iiyama Display Adapter",
+      "de": "Iiyama-Anzeigeadapter",
+      "ru": "Адаптер дисплея Iiyama",
+      "pt": "Adaptador de vídeo Iiyama",
+      "nl": "Iiyama-beeldschermadapter",
+      "fr": "Adaptateur d'affichage Iiyama",
+      "it": "Adattatore display Iiyama",
+      "es": "Adaptador de pantalla Iiyama",
+      "pl": "Adapter wyświetlacza Iiyama",
+      "uk": "Дисплейний адаптер Iiyama",
+      "zh-cn": "饭山显示适配器"
+    },
+    "authors": [
+      "Alan Paris <alan.paris@scottish.rugby>"
+    ],
+    "keywords": [
+      "iiyama",
+      "prolite",
+      "display",
+      "signage",
+      "rs232"
+    ],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "iiyama-prolite.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/AlanSRU/ioBroker.iiyama-prolite/main/admin/iiyama-prolite.png",
+    "readme": "https://github.com/AlanSRU/ioBroker.iiyama-prolite/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "multimedia",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.6.20"
+      }
+    ]
+  },
+  "native": {
+    "connectionType": "tcp",
+    "host": "192.168.1.100",
+    "port": 5000,
+    "macAddress": "",
+    "broadcastAddress": "",
+    "serialPort": "/dev/ttyUSB0",
+    "baudRate": 9600,
+    "monitorId": 1,
+    "pollInterval": 30,
+    "powerSaveMode": 1
+  },
+  "objects": [],
+  "instanceObjects": []
 }
