@@ -11,7 +11,14 @@ nbproject
 iobroker.*.tgz
 
 Thumbs.db
+.DS_Store
 .commitinfo
+
+# Local dev notes (never commit)
+CLAUDE.md
+
+# Pre-release review marker
+.review/
 
 # i18n intermediate files
 admin/i18n/flat.txt
