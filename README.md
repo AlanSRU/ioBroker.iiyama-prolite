@@ -189,6 +189,7 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	### __WORK IN PROGRESS__
 -->
 ### __WORK IN PROGRESS__
+* (Alan Paris) Enabled automated npm publishing via GitHub Actions trusted publishing (OIDC)
 
 ### 0.1.0 (2026-07-05)
 * (Alan Paris) Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays
