@@ -2,21 +2,7 @@
 	"common": {
 		"name": "iiyama",
 		"version": "0.0.1",
-		"news": {
-			"0.0.1": {
-				"en": "initial release",
-				"de": "Erstveröffentlichung",
-				"ru": "Начальная версия",
-				"pt": "lançamento inicial",
-				"nl": "Eerste uitgave",
-				"fr": "Première version",
-				"it": "Versione iniziale",
-				"es": "Versión inicial",
-				"pl": "Pierwsze wydanie",
-				"uk": "Початкова версія",
-				"zh-cn": "首次出版"
-			}
-		},
+		"news": {},
 		"titleLang": {
 			"en": "Iiyama Display",
 			"de": "Iiyama-Anzeige",
@@ -43,8 +29,14 @@
 			"uk": "Дисплейний адаптер Iiyama",
 			"zh-cn": "饭山显示适配器"
 		},
-		"authors": ["Alan Paris <alan.paris@scottish.rugby>"],
-		"keywords": ["iiyama", "display", "adapter"],
+		"authors": [
+			"Alan Paris <alan.paris@scottish.rugby>"
+		],
+		"keywords": [
+			"iiyama",
+			"display",
+			"adapter"
+		],
 		"licenseInformation": {
 			"type": "free",
 			"license": "MIT"
@@ -52,8 +44,8 @@
 		"platform": "Javascript/Node.js",
 		"icon": "iiyama.png",
 		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/Scottish Rugby/ioBroker.iiyama/main/admin/iiyama.png",
-		"readme": "https://github.com/Scottish Rugby/ioBroker.iiyama/blob/main/README.md",
+		"extIcon": "https://raw.githubusercontent.com/AlanSRU/ioBroker.iiyama/main/admin/iiyama.png",
+		"readme": "https://github.com/AlanSRU/ioBroker.iiyama/blob/main/README.md",
 		"loglevel": "info",
 		"tier": 3,
 		"mode": "daemon",
@@ -71,7 +63,7 @@
 		],
 		"globalDependencies": [
 			{
-				"admin": ">=7.0.23"
+				"admin": ">=7.6.20"
 			}
 		]
 	},

@@ -15,34 +15,59 @@
 					"value": "serial"
 				}
 			],
-			"newLine": true
+			"newLine": true,
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"host": {
 			"type": "text",
 			"label": "IP Address",
 			"hidden": "data.connectionType !== 'tcp'",
-			"newLine": true
+			"newLine": true,
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"port": {
 			"type": "number",
 			"label": "TCP Port",
 			"hidden": "data.connectionType !== 'tcp'",
 			"min": 1,
-			"max": 65535
+			"max": 65535,
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"macAddress": {
 			"type": "text",
 			"label": "MAC Address",
 			"placeholder": "AA:BB:CC:DD:EE:FF",
 			"hidden": "data.connectionType !== 'tcp'",
-			"help": "Required for Power Save Mode 3 and 4 (Wake-on-LAN enabled)."
+			"help": "Required for Power Save Mode 3 and 4 (Wake-on-LAN enabled).",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"broadcastAddress": {
 			"type": "text",
 			"label": "WOL Broadcast Address",
 			"placeholder": "e.g. 192.168.1.255",
 			"hidden": "data.connectionType !== 'tcp'",
-			"help": "Subnet broadcast address for WOL packets. If empty, derived from host IP (e.g. 192.168.1.100 → 192.168.1.255)."
+			"help": "Subnet broadcast address for WOL packets. If empty, derived from host IP (e.g. 192.168.1.100 to 192.168.1.255).",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"powerSaveMode": {
 			"type": "select",
@@ -67,14 +92,24 @@
 					"value": 4
 				}
 			],
-			"help": "Must match the Power Save mode on your display. Mode 1/2: WOL disabled, no network wake. Mode 3/4: WOL enabled, requires MAC address."
+			"help": "Must match the Power Save mode on your display. Mode 1/2: WOL disabled, no network wake. Mode 3/4: WOL enabled, requires MAC address.",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"serialPort": {
 			"type": "text",
 			"label": "Serial Port",
 			"placeholder": "/dev/ttyUSB0 or COM1",
 			"hidden": "data.connectionType !== 'serial'",
-			"newLine": true
+			"newLine": true,
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"baudRate": {
 			"type": "select",
@@ -89,7 +124,12 @@
 					"value": 115200
 				}
 			],
-			"hidden": "data.connectionType !== 'serial'"
+			"hidden": "data.connectionType !== 'serial'",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"monitorId": {
 			"type": "number",
@@ -97,14 +137,24 @@
 			"min": 1,
 			"max": 255,
 			"newLine": true,
-			"help": "Monitor ID (1-255) as configured on the display"
+			"help": "Monitor ID (1-255) as configured on the display",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		},
 		"pollInterval": {
 			"type": "number",
 			"label": "Poll Interval (seconds)",
 			"min": 5,
 			"max": 300,
-			"help": "Interval for polling display status"
+			"help": "Interval for polling display status",
+			"xs": 12,
+			"sm": 12,
+			"md": 6,
+			"lg": 6,
+			"xl": 6
 		}
 	}
 }

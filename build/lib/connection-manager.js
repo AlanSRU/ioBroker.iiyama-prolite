@@ -31,11 +31,11 @@ __export(connection_manager_exports, {
   ConnectionManager: () => ConnectionManager
 });
 module.exports = __toCommonJS(connection_manager_exports);
-var import_events = require("events");
-var net = __toESM(require("net"));
+var import_node_events = require("node:events");
+var net = __toESM(require("node:net"));
 var import_serialport = require("serialport");
 var import_iiyama_protocol = require("./iiyama-protocol");
-class ConnectionManager extends import_events.EventEmitter {
+class ConnectionManager extends import_node_events.EventEmitter {
   constructor(config, log) {
     super();
     this.config = config;
@@ -55,6 +55,8 @@ class ConnectionManager extends import_events.EventEmitter {
   autoReconnectEnabled = true;
   /**
    * Enable or disable auto-reconnect
+   *
+   * @param enabled
    */
   setAutoReconnect(enabled) {
     this.autoReconnectEnabled = enabled;
@@ -86,6 +88,9 @@ class ConnectionManager extends import_events.EventEmitter {
   }
   /**
    * Connect via TCP/IP
+   *
+   * @param resolve
+   * @param reject
    */
   connectTCP(resolve, reject) {
     if (!this.config.host || !this.config.port) {
@@ -119,6 +124,9 @@ class ConnectionManager extends import_events.EventEmitter {
   }
   /**
    * Connect via Serial
+   *
+   * @param resolve
+   * @param reject
    */
   connectSerial(resolve, reject) {
     if (!this.config.serialPort || !this.config.baudRate) {
@@ -154,6 +162,8 @@ class ConnectionManager extends import_events.EventEmitter {
   }
   /**
    * Handle incoming data
+   *
+   * @param data
    */
   handleData(data) {
     this.log.debug(`Received data: ${data.toString("hex")} (${data.length} bytes)`);
@@ -186,7 +196,9 @@ class ConnectionManager extends import_events.EventEmitter {
       this.buffer = this.buffer.slice(totalLength);
       const response = import_iiyama_protocol.IiyamaProtocol.parseResponse(packet);
       if (response) {
-        this.log.debug(`Valid response received: monitorId=${response.monitorId}, commandCode=0x${response.commandCode.toString(16)}, isAck=${response.isAck}, data=[${response.data}]`);
+        this.log.debug(
+          `Valid response received: monitorId=${response.monitorId}, commandCode=0x${response.commandCode.toString(16)}, isAck=${response.isAck}, data=[${response.data.join(",")}]`
+        );
         this.emit("response", response);
       } else {
         this.log.error(`Invalid response checksum! Packet: ${packet.toString("hex")}`);
@@ -196,6 +208,9 @@ class ConnectionManager extends import_events.EventEmitter {
   }
   /**
    * Send command to display
+   *
+   * @param command
+   * @param waitForResponse
    */
   async sendCommand(command, waitForResponse = true) {
     if (!this.connected || !this.client) {

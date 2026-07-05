@@ -105,6 +105,10 @@ class IiyamaProtocol {
   /**
    * Build a command packet
    * Packet format: [HEADER][MONITOR_ID][CATEGORY][PAGE][MSG_TYPE][LENGTH][DATA_CONTROL][CMD_CODE][DATA...][CHECKSUM]
+   *
+   * @param monitorId
+   * @param commandCode
+   * @param data
    */
   static buildCommand(monitorId, commandCode, data = []) {
     const length = data.length + 3;
@@ -128,6 +132,8 @@ class IiyamaProtocol {
    * Parse a response packet
    * Response format: [HEADER][MONITOR_ID][CATEGORY][PAGE][LENGTH][DATA_CONTROL][CMD_CODE][DATA...][CHECKSUM]
    * Note: Response format does NOT have the message type byte that commands have
+   *
+   * @param buffer
    */
   static parseResponse(buffer) {
     if (buffer.length < 9) {
@@ -157,42 +163,67 @@ class IiyamaProtocol {
   }
   /**
    * Build power state command
+   *
+   * @param monitorId
+   * @param powerOn
    */
   static buildPowerCommand(monitorId, powerOn) {
     return this.buildCommand(monitorId, 24 /* POWER_STATE_SET */, [powerOn ? 2 /* ON */ : 1 /* OFF */]);
   }
   /**
    * Build get power state command
+   *
+   * @param monitorId
    */
   static buildGetPowerCommand(monitorId) {
     return this.buildCommand(monitorId, 25 /* POWER_STATE_GET */);
   }
   /**
    * Build input source command
+   *
+   * @param monitorId
+   * @param source
    */
   static buildInputSourceCommand(monitorId, source) {
     return this.buildCommand(monitorId, 172 /* INPUT_SOURCE_SET */, [source, 0, 0, 0]);
   }
   /**
    * Build get current source command
+   *
+   * @param monitorId
    */
   static buildGetCurrentSourceCommand(monitorId) {
     return this.buildCommand(monitorId, 173 /* CURRENT_SOURCE_GET */);
   }
   /**
    * Build volume command
+   *
+   * @param monitorId
+   * @param volume
+   * @param audioOut
    */
   static buildVolumeCommand(monitorId, volume, audioOut) {
     return this.buildCommand(monitorId, 68 /* VOLUME_SET */, [volume, audioOut]);
   }
   /**
    * Build get volume command
+   *
+   * @param monitorId
    */
   static buildGetVolumeCommand(monitorId) {
     return this.buildCommand(monitorId, 69 /* VOLUME_GET */);
   }
   /**
    * Build video parameters command
+   *
+   * @param monitorId
+   * @param brightness
+   * @param color
+   * @param contrast
+   * @param sharpness
+   * @param tint
+   * @param blackLevel
+   * @param gamma
    */
   static buildVideoParamsCommand(monitorId, brightness, color, contrast, sharpness, tint, blackLevel, gamma) {
     return this.buildCommand(monitorId, 50 /* VIDEO_PARAMS_SET */, [
@@ -207,120 +238,169 @@ class IiyamaProtocol {
   }
   /**
    * Build get video parameters command
+   *
+   * @param monitorId
    */
   static buildGetVideoParamsCommand(monitorId) {
     return this.buildCommand(monitorId, 51 /* VIDEO_PARAMS_GET */);
   }
   /**
    * Build color temperature command
+   *
+   * @param monitorId
+   * @param colorTemp
    */
   static buildColorTempCommand(monitorId, colorTemp) {
     return this.buildCommand(monitorId, 52 /* COLOR_TEMP_SET */, [colorTemp]);
   }
   /**
    * Build get color temperature command
+   *
+   * @param monitorId
    */
   static buildGetColorTempCommand(monitorId) {
     return this.buildCommand(monitorId, 53 /* COLOR_TEMP_GET */);
   }
   /**
    * Build picture format command
+   *
+   * @param monitorId
+   * @param format
    */
   static buildPictureFormatCommand(monitorId, format) {
     return this.buildCommand(monitorId, 58 /* PICTURE_FORMAT_SET */, [format]);
   }
   /**
    * Build get picture format command
+   *
+   * @param monitorId
    */
   static buildGetPictureFormatCommand(monitorId) {
     return this.buildCommand(monitorId, 59 /* PICTURE_FORMAT_GET */);
   }
   /**
    * Build audio parameters command
+   *
+   * @param monitorId
+   * @param treble
+   * @param bass
    */
   static buildAudioParamsCommand(monitorId, treble, bass) {
     return this.buildCommand(monitorId, 66 /* AUDIO_PARAMS_SET */, [treble, bass]);
   }
   /**
    * Build get audio parameters command
+   *
+   * @param monitorId
    */
   static buildGetAudioParamsCommand(monitorId) {
     return this.buildCommand(monitorId, 67 /* AUDIO_PARAMS_GET */);
   }
   /**
    * Build get operating hours command
+   *
+   * @param monitorId
    */
   static buildGetOperatingHoursCommand(monitorId) {
     return this.buildCommand(monitorId, 15 /* OPERATING_HOURS_GET */, [2]);
   }
   /**
    * Build get serial code command
+   *
+   * @param monitorId
    */
   static buildGetSerialCodeCommand(monitorId) {
     return this.buildCommand(monitorId, 21 /* SERIAL_CODE_GET */);
   }
   /**
    * Build auto adjust command (VGA only)
+   *
+   * @param monitorId
    */
   static buildAutoAdjustCommand(monitorId) {
     return this.buildCommand(monitorId, 112 /* AUTO_ADJUST */, [64, 0]);
   }
   /**
    * Build IR lock command
+   *
+   * @param monitorId
+   * @param lockState
    */
   static buildIRLockCommand(monitorId, lockState) {
     return this.buildCommand(monitorId, 28 /* IR_LOCK_SET */, [lockState]);
   }
   /**
    * Build get IR lock command
+   *
+   * @param monitorId
    */
   static buildGetIRLockCommand(monitorId) {
     return this.buildCommand(monitorId, 29 /* IR_LOCK_GET */);
   }
   /**
    * Build keypad lock command
+   *
+   * @param monitorId
+   * @param lockState
    */
   static buildKeypadLockCommand(monitorId, lockState) {
     return this.buildCommand(monitorId, 26 /* KEYPAD_LOCK_SET */, [lockState]);
   }
   /**
    * Build get keypad lock command
+   *
+   * @param monitorId
    */
   static buildGetKeypadLockCommand(monitorId) {
     return this.buildCommand(monitorId, 27 /* KEYPAD_LOCK_GET */);
   }
   /**
    * Build language command
+   *
+   * @param monitorId
+   * @param language
    */
   static buildLanguageCommand(monitorId, language) {
     return this.buildCommand(monitorId, 193 /* LANGUAGE_SET */, [language]);
   }
   /**
    * Build get language command
+   *
+   * @param monitorId
    */
   static buildGetLanguageCommand(monitorId) {
     return this.buildCommand(monitorId, 192 /* LANGUAGE_GET */);
   }
   /**
    * Build pixel shift command
+   *
+   * @param monitorId
+   * @param value
    */
   static buildPixelShiftCommand(monitorId, value) {
     return this.buildCommand(monitorId, 178 /* PIXEL_SHIFT_SET */, [value]);
   }
   /**
    * Build get pixel shift command
+   *
+   * @param monitorId
    */
   static buildGetPixelShiftCommand(monitorId) {
     return this.buildCommand(monitorId, 177 /* PIXEL_SHIFT_GET */);
   }
   /**
    * Build get model/FW version command
+   *
+   * @param monitorId
+   * @param type
    */
   static buildGetModelFWCommand(monitorId, type) {
     return this.buildCommand(monitorId, 161 /* MODEL_NUMBER_FW */, [type]);
   }
   /**
    * Parse power state from response
+   *
+   * @param response
    */
   static parsePowerState(response) {
     if (response.commandCode === 25 /* POWER_STATE_GET */ && response.data.length >= 1) {
@@ -330,6 +410,8 @@ class IiyamaProtocol {
   }
   /**
    * Parse input source from response
+   *
+   * @param response
    */
   static parseInputSource(response) {
     if (response.commandCode === 173 /* CURRENT_SOURCE_GET */ && response.data.length >= 1) {
@@ -339,6 +421,8 @@ class IiyamaProtocol {
   }
   /**
    * Parse volume from response
+   *
+   * @param response
    */
   static parseVolume(response) {
     if (response.commandCode === 69 /* VOLUME_GET */ && response.data.length >= 2) {
@@ -351,6 +435,8 @@ class IiyamaProtocol {
   }
   /**
    * Parse video parameters from response
+   *
+   * @param response
    */
   static parseVideoParams(response) {
     if (response.commandCode === 51 /* VIDEO_PARAMS_GET */ && response.data.length >= 7) {
@@ -368,6 +454,8 @@ class IiyamaProtocol {
   }
   /**
    * Parse operating hours from response
+   *
+   * @param response
    */
   static parseOperatingHours(response) {
     if (response.commandCode === 15 /* OPERATING_HOURS_GET */ && response.data.length >= 2) {
@@ -377,6 +465,8 @@ class IiyamaProtocol {
   }
   /**
    * Parse serial code from response
+   *
+   * @param response
    */
   static parseSerialCode(response) {
     if (response.commandCode === 21 /* SERIAL_CODE_GET */ && response.data.length >= 1) {

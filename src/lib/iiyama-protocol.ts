@@ -116,6 +116,10 @@ export class IiyamaProtocol {
 	/**
 	 * Build a command packet
 	 * Packet format: [HEADER][MONITOR_ID][CATEGORY][PAGE][MSG_TYPE][LENGTH][DATA_CONTROL][CMD_CODE][DATA...][CHECKSUM]
+	 *
+	 * @param monitorId
+	 * @param commandCode
+	 * @param data
 	 */
 	public static buildCommand(monitorId: number, commandCode: number, data: number[] = []): Buffer {
 		const length = data.length + 3; // data control + command code + data + 1
@@ -142,6 +146,8 @@ export class IiyamaProtocol {
 	 * Parse a response packet
 	 * Response format: [HEADER][MONITOR_ID][CATEGORY][PAGE][LENGTH][DATA_CONTROL][CMD_CODE][DATA...][CHECKSUM]
 	 * Note: Response format does NOT have the message type byte that commands have
+	 *
+	 * @param buffer
 	 */
 	public static parseResponse(buffer: Buffer): IiyamaResponse | null {
 		if (buffer.length < 9) {
@@ -182,6 +188,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build power state command
+	 *
+	 * @param monitorId
+	 * @param powerOn
 	 */
 	public static buildPowerCommand(monitorId: number, powerOn: boolean): Buffer {
 		return this.buildCommand(monitorId, CommandCode.POWER_STATE_SET, [powerOn ? PowerState.ON : PowerState.OFF]);
@@ -189,6 +198,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get power state command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetPowerCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.POWER_STATE_GET);
@@ -196,6 +207,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build input source command
+	 *
+	 * @param monitorId
+	 * @param source
 	 */
 	public static buildInputSourceCommand(monitorId: number, source: InputSource): Buffer {
 		return this.buildCommand(monitorId, CommandCode.INPUT_SOURCE_SET, [source, 0x00, 0x00, 0x00]);
@@ -203,6 +217,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get current source command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetCurrentSourceCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.CURRENT_SOURCE_GET);
@@ -210,6 +226,10 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build volume command
+	 *
+	 * @param monitorId
+	 * @param volume
+	 * @param audioOut
 	 */
 	public static buildVolumeCommand(monitorId: number, volume: number, audioOut: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.VOLUME_SET, [volume, audioOut]);
@@ -217,6 +237,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get volume command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetVolumeCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.VOLUME_GET);
@@ -224,6 +246,15 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build video parameters command
+	 *
+	 * @param monitorId
+	 * @param brightness
+	 * @param color
+	 * @param contrast
+	 * @param sharpness
+	 * @param tint
+	 * @param blackLevel
+	 * @param gamma
 	 */
 	public static buildVideoParamsCommand(
 		monitorId: number,
@@ -248,6 +279,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get video parameters command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetVideoParamsCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.VIDEO_PARAMS_GET);
@@ -255,6 +288,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build color temperature command
+	 *
+	 * @param monitorId
+	 * @param colorTemp
 	 */
 	public static buildColorTempCommand(monitorId: number, colorTemp: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.COLOR_TEMP_SET, [colorTemp]);
@@ -262,6 +298,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get color temperature command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetColorTempCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.COLOR_TEMP_GET);
@@ -269,6 +307,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build picture format command
+	 *
+	 * @param monitorId
+	 * @param format
 	 */
 	public static buildPictureFormatCommand(monitorId: number, format: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.PICTURE_FORMAT_SET, [format]);
@@ -276,6 +317,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get picture format command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetPictureFormatCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.PICTURE_FORMAT_GET);
@@ -283,6 +326,10 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build audio parameters command
+	 *
+	 * @param monitorId
+	 * @param treble
+	 * @param bass
 	 */
 	public static buildAudioParamsCommand(monitorId: number, treble: number, bass: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.AUDIO_PARAMS_SET, [treble, bass]);
@@ -290,6 +337,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get audio parameters command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetAudioParamsCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.AUDIO_PARAMS_GET);
@@ -297,6 +346,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get operating hours command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetOperatingHoursCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.OPERATING_HOURS_GET, [0x02]);
@@ -304,6 +355,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get serial code command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetSerialCodeCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.SERIAL_CODE_GET);
@@ -311,6 +364,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build auto adjust command (VGA only)
+	 *
+	 * @param monitorId
 	 */
 	public static buildAutoAdjustCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.AUTO_ADJUST, [0x40, 0x00]);
@@ -318,6 +373,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build IR lock command
+	 *
+	 * @param monitorId
+	 * @param lockState
 	 */
 	public static buildIRLockCommand(monitorId: number, lockState: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.IR_LOCK_SET, [lockState]);
@@ -325,6 +383,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get IR lock command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetIRLockCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.IR_LOCK_GET);
@@ -332,6 +392,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build keypad lock command
+	 *
+	 * @param monitorId
+	 * @param lockState
 	 */
 	public static buildKeypadLockCommand(monitorId: number, lockState: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.KEYPAD_LOCK_SET, [lockState]);
@@ -339,6 +402,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get keypad lock command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetKeypadLockCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.KEYPAD_LOCK_GET);
@@ -346,6 +411,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build language command
+	 *
+	 * @param monitorId
+	 * @param language
 	 */
 	public static buildLanguageCommand(monitorId: number, language: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.LANGUAGE_SET, [language]);
@@ -353,6 +421,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get language command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetLanguageCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.LANGUAGE_GET);
@@ -360,6 +430,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build pixel shift command
+	 *
+	 * @param monitorId
+	 * @param value
 	 */
 	public static buildPixelShiftCommand(monitorId: number, value: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.PIXEL_SHIFT_SET, [value]);
@@ -367,6 +440,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get pixel shift command
+	 *
+	 * @param monitorId
 	 */
 	public static buildGetPixelShiftCommand(monitorId: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.PIXEL_SHIFT_GET);
@@ -374,6 +449,9 @@ export class IiyamaProtocol {
 
 	/**
 	 * Build get model/FW version command
+	 *
+	 * @param monitorId
+	 * @param type
 	 */
 	public static buildGetModelFWCommand(monitorId: number, type: number): Buffer {
 		return this.buildCommand(monitorId, CommandCode.MODEL_NUMBER_FW, [type]);
@@ -381,6 +459,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Parse power state from response
+	 *
+	 * @param response
 	 */
 	public static parsePowerState(response: IiyamaResponse): boolean | null {
 		if (response.commandCode === CommandCode.POWER_STATE_GET && response.data.length >= 1) {
@@ -391,18 +471,25 @@ export class IiyamaProtocol {
 
 	/**
 	 * Parse input source from response
+	 *
+	 * @param response
 	 */
 	public static parseInputSource(response: IiyamaResponse): InputSource | null {
 		if (response.commandCode === CommandCode.CURRENT_SOURCE_GET && response.data.length >= 1) {
-			return response.data[0] as InputSource;
+			return response.data[0];
 		}
 		return null;
 	}
 
 	/**
 	 * Parse volume from response
+	 *
+	 * @param response
 	 */
-	public static parseVolume(response: IiyamaResponse): { volume: number; audioOut: number } | null {
+	public static parseVolume(response: IiyamaResponse): {
+		volume: number;
+		audioOut: number;
+	} | null {
 		if (response.commandCode === CommandCode.VOLUME_GET && response.data.length >= 2) {
 			return {
 				volume: response.data[0],
@@ -414,6 +501,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Parse video parameters from response
+	 *
+	 * @param response
 	 */
 	public static parseVideoParams(response: IiyamaResponse): {
 		brightness: number;
@@ -440,6 +529,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Parse operating hours from response
+	 *
+	 * @param response
 	 */
 	public static parseOperatingHours(response: IiyamaResponse): number | null {
 		if (response.commandCode === CommandCode.OPERATING_HOURS_GET && response.data.length >= 2) {
@@ -451,6 +542,8 @@ export class IiyamaProtocol {
 
 	/**
 	 * Parse serial code from response
+	 *
+	 * @param response
 	 */
 	public static parseSerialCode(response: IiyamaResponse): string | null {
 		if (response.commandCode === CommandCode.SERIAL_CODE_GET && response.data.length >= 1) {

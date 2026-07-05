@@ -1,5 +1,24 @@
 {
-	"iiyama adapter settings": "Adapter settings for iiyama",
-	"option1": "option1",
-	"option2": "option2"
+	"Connection Type": "Connection Type",
+	"TCP/IP (LAN)": "TCP/IP (LAN)",
+	"Serial (RS232)": "Serial (RS232)",
+	"IP Address": "IP Address",
+	"TCP Port": "TCP Port",
+	"MAC Address": "MAC Address",
+	"Required for Power Save Mode 3 and 4 (Wake-on-LAN enabled).": "Required for Power Save Mode 3 and 4 (Wake-on-LAN enabled).",
+	"WOL Broadcast Address": "WOL Broadcast Address",
+	"Subnet broadcast address for WOL packets. If empty, derived from host IP (e.g. 192.168.1.100 to 192.168.1.255).": "Subnet broadcast address for WOL packets. If empty, derived from host IP (e.g. 192.168.1.100 to 192.168.1.255).",
+	"Power Save Mode": "Power Save Mode",
+	"Mode 1: WOL off, source input wake off (cannot wake via network)": "Mode 1: WOL off, source input wake off (cannot wake via network)",
+	"Mode 2: WOL off, source input wake on (wakes on source signal only)": "Mode 2: WOL off, source input wake on (wakes on source signal only)",
+	"Mode 3: WOL on, source input wake off (requires MAC address)": "Mode 3: WOL on, source input wake off (requires MAC address)",
+	"Mode 4: WOL on, source input wake on (recommended, requires MAC address)": "Mode 4: WOL on, source input wake on (recommended, requires MAC address)",
+	"Must match the Power Save mode on your display. Mode 1/2: WOL disabled, no network wake. Mode 3/4: WOL enabled, requires MAC address.": "Must match the Power Save mode on your display. Mode 1/2: WOL disabled, no network wake. Mode 3/4: WOL enabled, requires MAC address.",
+	"Serial Port": "Serial Port",
+	"Baud Rate": "Baud Rate",
+	"115200 (LHxx42UHS-B1 series)": "115200 (LHxx42UHS-B1 series)",
+	"Monitor ID": "Monitor ID",
+	"Monitor ID (1-255) as configured on the display": "Monitor ID (1-255) as configured on the display",
+	"Poll Interval (seconds)": "Poll Interval (seconds)",
+	"Interval for polling display status": "Interval for polling display status"
 }

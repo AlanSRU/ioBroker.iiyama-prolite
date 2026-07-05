@@ -6,12 +6,12 @@
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 import { ConnectionManager } from './lib/connection-manager';
-import { IiyamaProtocol, InputSource, PowerState, IiyamaResponse } from './lib/iiyama-protocol';
+import { IiyamaProtocol, InputSource } from './lib/iiyama-protocol';
 import { WakeOnLan } from './lib/wake-on-lan';
 
 class Iiyama extends utils.Adapter {
 	private connection: ConnectionManager | null = null;
-	private pollInterval: NodeJS.Timeout | null = null;
+	private pollInterval: ioBroker.Interval | undefined;
 	private commandQueue: Array<() => Promise<void>> = [];
 	private processingQueue = false;
 	private wolInProgress = false; // Flag to prevent polling during WOL wake sequence
@@ -41,9 +41,7 @@ class Iiyama extends utils.Adapter {
 				3: 'WOL on, source input wake off - Use WOL + power command',
 				4: 'WOL on, source input wake on - Use WOL + power command (recommended)',
 			};
-			this.log.info(
-				`Power Save Mode ${powerSaveMode}: ${modeDescriptions[powerSaveMode as keyof typeof modeDescriptions] || 'Unknown mode'}`,
-			);
+			this.log.info(`Power Save Mode ${powerSaveMode}: ${modeDescriptions[powerSaveMode] || 'Unknown mode'}`);
 		}
 
 		// Validate configuration
@@ -62,6 +60,18 @@ class Iiyama extends utils.Adapter {
 		if (!this.config.monitorId || this.config.monitorId < 1 || this.config.monitorId > 255) {
 			this.log.error('Monitor ID must be between 1 and 255');
 			return;
+		}
+
+		// Clamp/validate numeric config in code — the admin UI min/max is not enforced
+		// for values set via CLI or by editing the instance config directly.
+		this.config.pollInterval = Math.min(300, Math.max(5, parseInt(String(this.config.pollInterval), 10) || 30));
+		if (this.config.connectionType === 'tcp') {
+			const port = parseInt(String(this.config.port), 10);
+			if (!(port >= 1 && port <= 65535)) {
+				this.log.error(`TCP port must be between 1 and 65535 (got ${this.config.port})`);
+				return;
+			}
+			this.config.port = port;
 		}
 
 		// Create state objects
@@ -426,7 +436,7 @@ class Iiyama extends utils.Adapter {
 				// Don't start polling during WOL wake sequence - it will be started after power command
 				if (!this.wolInProgress) {
 					// Give display time to be ready for protocol commands after TCP connect
-					setTimeout(() => {
+					this.setTimeout(() => {
 						this.startPolling();
 						this.pollStatus();
 					}, 2000);
@@ -453,7 +463,9 @@ class Iiyama extends utils.Adapter {
 			});
 
 			this.connection.on('maxReconnectReached', () => {
-				this.log.info('Max reconnection attempts reached - display appears to be off. Will reconnect on power-on command.');
+				this.log.info(
+					'Max reconnection attempts reached - display appears to be off. Will reconnect on power-on command.',
+				);
 				this.setState('info.standby', true, true);
 			});
 
@@ -461,7 +473,11 @@ class Iiyama extends utils.Adapter {
 		} catch (error) {
 			// Don't log as error if display is simply off/unreachable - this is expected
 			const errorMsg = (error as Error).message;
-			if (errorMsg.includes('EHOSTUNREACH') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('ETIMEDOUT')) {
+			if (
+				errorMsg.includes('EHOSTUNREACH') ||
+				errorMsg.includes('ECONNREFUSED') ||
+				errorMsg.includes('ETIMEDOUT')
+			) {
 				this.log.info(`Display not reachable (may be off/in standby): ${errorMsg}`);
 				this.setState('info.standby', true, true);
 			} else {
@@ -480,7 +496,7 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const interval = (this.config.pollInterval || 30) * 1000;
-		this.pollInterval = setInterval(() => {
+		this.pollInterval = this.setInterval(() => {
 			this.pollStatus();
 		}, interval);
 	}
@@ -490,15 +506,15 @@ class Iiyama extends utils.Adapter {
 	 */
 	private stopPolling(): void {
 		if (this.pollInterval) {
-			clearInterval(this.pollInterval);
-			this.pollInterval = null;
+			this.clearInterval(this.pollInterval);
+			this.pollInterval = undefined;
 		}
 	}
 
 	/**
 	 * Poll display status
 	 */
-	private async pollStatus(): Promise<void> {
+	private pollStatus(): void {
 		if (!this.connection || !this.connection.isConnected()) {
 			return;
 		}
@@ -521,6 +537,8 @@ class Iiyama extends utils.Adapter {
 
 	/**
 	 * Queue a command for execution
+	 *
+	 * @param command
 	 */
 	private queueCommand(command: () => Promise<void>): void {
 		this.commandQueue.push(command);
@@ -543,7 +561,7 @@ class Iiyama extends utils.Adapter {
 				try {
 					await command();
 					// Small delay between commands
-					await new Promise((resolve) => setTimeout(resolve, 100));
+					await this.delay(100);
 				} catch (error) {
 					this.log.error(`Error executing command: ${(error as Error).message}`);
 				}
@@ -557,7 +575,9 @@ class Iiyama extends utils.Adapter {
 	 * Get power state
 	 */
 	private async getPowerState(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetPowerCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -574,7 +594,9 @@ class Iiyama extends utils.Adapter {
 	 * Get current source
 	 */
 	private async getCurrentSource(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetCurrentSourceCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -591,7 +613,9 @@ class Iiyama extends utils.Adapter {
 	 * Get volume
 	 */
 	private async getVolume(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetVolumeCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -609,7 +633,9 @@ class Iiyama extends utils.Adapter {
 	 * Get video parameters
 	 */
 	private async getVideoParams(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetVideoParamsCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -632,7 +658,9 @@ class Iiyama extends utils.Adapter {
 	 * Get color temperature
 	 */
 	private async getColorTemperature(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetColorTempCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -646,7 +674,9 @@ class Iiyama extends utils.Adapter {
 	 * Get picture format
 	 */
 	private async getPictureFormat(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetPictureFormatCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -660,7 +690,9 @@ class Iiyama extends utils.Adapter {
 	 * Get audio parameters
 	 */
 	private async getAudioParams(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetAudioParamsCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -675,7 +707,9 @@ class Iiyama extends utils.Adapter {
 	 * Get operating hours
 	 */
 	private async getOperatingHours(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetOperatingHoursCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -692,7 +726,9 @@ class Iiyama extends utils.Adapter {
 	 * Get serial code
 	 */
 	private async getSerialCode(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const cmd = IiyamaProtocol.buildGetSerialCodeCommand(this.config.monitorId);
 		const response = await this.connection.sendCommand(cmd);
@@ -748,7 +784,7 @@ class Iiyama extends utils.Adapter {
 					break;
 
 				case 'inputSource':
-					await this.setInputSource(state.val as number);
+					this.setInputSource(state.val as number);
 					break;
 
 				case 'volume.main':
@@ -767,11 +803,11 @@ class Iiyama extends utils.Adapter {
 					break;
 
 				case 'video.colorTemperature':
-					await this.setColorTemperature(state.val as number);
+					this.setColorTemperature(state.val as number);
 					break;
 
 				case 'video.pictureFormat':
-					await this.setPictureFormat(state.val as number);
+					this.setPictureFormat(state.val as number);
 					break;
 
 				case 'audio.treble':
@@ -781,7 +817,7 @@ class Iiyama extends utils.Adapter {
 
 				case 'commands.autoAdjust':
 					if (state.val) {
-						await this.autoAdjust();
+						this.autoAdjust();
 					}
 					break;
 			}
@@ -797,9 +833,13 @@ class Iiyama extends utils.Adapter {
 	 * - Mode 2: WOL off, source input wake on, backlight off → wakes on source signal only
 	 * - Mode 3: WOL on, source input wake off, backlight off → use WOL then send power command
 	 * - Mode 4: WOL on, source input wake on, backlight off → use WOL + power command (recommended)
+	 *
+	 * @param powerOn
 	 */
 	private async setPower(powerOn: boolean): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		// Determine power control method based on Power Save mode
 		// Mode 1: WOL off, source input wake off (cannot wake via network)
@@ -808,7 +848,6 @@ class Iiyama extends utils.Adapter {
 		// Mode 4: WOL on, source input wake on (use WOL + power command, recommended)
 		const powerSaveMode = this.config.powerSaveMode || 1;
 		const needsWol = powerSaveMode === 3 || powerSaveMode === 4; // Modes 3 & 4 have WOL enabled
-		const tcpStaysOn = powerSaveMode === 3 || powerSaveMode === 4; // Modes 3 & 4 keep TCP active
 
 		// Check if network power-on is possible
 		if (powerOn && this.config.connectionType === 'tcp') {
@@ -844,9 +883,11 @@ class Iiyama extends utils.Adapter {
 
 					try {
 						// Determine broadcast address: use configured value, or derive subnet broadcast from host IP
-						const broadcastAddr = this.config.broadcastAddress
-							|| this.config.host.replace(/\.\d+$/, '.255');
-						this.log.info(`Sending Wake-on-LAN packets to ${this.config.macAddress} via broadcast ${broadcastAddr} (ports 9 and 7, 3 packets each)`);
+						const broadcastAddr =
+							this.config.broadcastAddress || this.config.host.replace(/\.\d+$/, '.255');
+						this.log.info(
+							`Sending Wake-on-LAN packets to ${this.config.macAddress} via broadcast ${broadcastAddr} (ports 9 and 7, 3 packets each)`,
+						);
 						await WakeOnLan.wake(this.config.macAddress, broadcastAddr);
 						this.log.info('Wake-on-LAN packets sent successfully');
 
@@ -862,7 +903,7 @@ class Iiyama extends utils.Adapter {
 
 							for (let attempt = 1; attempt <= maxRetries; attempt++) {
 								this.log.info(`Waiting for display to wake up... (attempt ${attempt}/${maxRetries})`);
-								await new Promise((resolve) => setTimeout(resolve, retryDelay));
+								await this.delay(retryDelay);
 
 								try {
 									this.log.info('Attempting to reconnect to display...');
@@ -872,7 +913,9 @@ class Iiyama extends utils.Adapter {
 									break;
 								} catch (connError) {
 									if (attempt === maxRetries) {
-										this.log.error(`Failed to reconnect after WOL: ${(connError as Error).message}`);
+										this.log.error(
+											`Failed to reconnect after WOL: ${(connError as Error).message}`,
+										);
 									} else {
 										this.log.debug(`Reconnect attempt ${attempt} failed, retrying...`);
 									}
@@ -889,7 +932,7 @@ class Iiyama extends utils.Adapter {
 
 							// Give display time to fully initialize after TCP connect
 							this.log.info('Waiting for display to initialize...');
-							await new Promise((resolve) => setTimeout(resolve, 3000));
+							await this.delay(3000);
 						}
 					} catch (error) {
 						this.log.warn(`Failed to send WOL packet: ${(error as Error).message}`);
@@ -919,12 +962,16 @@ class Iiyama extends utils.Adapter {
 
 	/**
 	 * Set input source
+	 *
+	 * @param source
 	 */
-	private async setInputSource(source: number): Promise<void> {
-		if (!this.connection) return;
+	private setInputSource(source: number): void {
+		if (!this.connection) {
+			return;
+		}
 
 		this.queueCommand(async () => {
-			const cmd = IiyamaProtocol.buildInputSourceCommand(this.config.monitorId, source as InputSource);
+			const cmd = IiyamaProtocol.buildInputSourceCommand(this.config.monitorId, source);
 			await this.connection!.sendCommand(cmd);
 			await this.setState('inputSource', source, true);
 		});
@@ -934,7 +981,9 @@ class Iiyama extends utils.Adapter {
 	 * Set volume
 	 */
 	private async setVolume(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const mainVol = await this.getStateAsync('volume.main');
 		const audioOutVol = await this.getStateAsync('volume.audioOut');
@@ -956,7 +1005,9 @@ class Iiyama extends utils.Adapter {
 	 * Set video parameters
 	 */
 	private async setVideoParams(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const brightness = (await this.getStateAsync('video.brightness'))?.val as number;
 		const color = (await this.getStateAsync('video.color'))?.val as number;
@@ -1000,9 +1051,13 @@ class Iiyama extends utils.Adapter {
 
 	/**
 	 * Set color temperature
+	 *
+	 * @param temp
 	 */
-	private async setColorTemperature(temp: number): Promise<void> {
-		if (!this.connection) return;
+	private setColorTemperature(temp: number): void {
+		if (!this.connection) {
+			return;
+		}
 
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildColorTempCommand(this.config.monitorId, temp);
@@ -1013,9 +1068,13 @@ class Iiyama extends utils.Adapter {
 
 	/**
 	 * Set picture format
+	 *
+	 * @param format
 	 */
-	private async setPictureFormat(format: number): Promise<void> {
-		if (!this.connection) return;
+	private setPictureFormat(format: number): void {
+		if (!this.connection) {
+			return;
+		}
 
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildPictureFormatCommand(this.config.monitorId, format);
@@ -1028,7 +1087,9 @@ class Iiyama extends utils.Adapter {
 	 * Set audio parameters
 	 */
 	private async setAudioParams(): Promise<void> {
-		if (!this.connection) return;
+		if (!this.connection) {
+			return;
+		}
 
 		const treble = (await this.getStateAsync('audio.treble'))?.val as number;
 		const bass = (await this.getStateAsync('audio.bass'))?.val as number;
@@ -1046,8 +1107,10 @@ class Iiyama extends utils.Adapter {
 	/**
 	 * Auto adjust (VGA only)
 	 */
-	private async autoAdjust(): Promise<void> {
-		if (!this.connection) return;
+	private autoAdjust(): void {
+		if (!this.connection) {
+			return;
+		}
 
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildAutoAdjustCommand(this.config.monitorId);

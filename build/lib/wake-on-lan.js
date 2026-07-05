@@ -31,11 +31,12 @@ __export(wake_on_lan_exports, {
   WakeOnLan: () => WakeOnLan
 });
 module.exports = __toCommonJS(wake_on_lan_exports);
-var dgram = __toESM(require("dgram"));
+var dgram = __toESM(require("node:dgram"));
 class WakeOnLan {
   /**
    * Send Wake-on-LAN magic packets to wake up a device.
    * Sends multiple packets to both standard WOL ports for reliability.
+   *
    * @param macAddress MAC address in format AA:BB:CC:DD:EE:FF or AA-BB-CC-DD-EE-FF
    * @param broadcastAddress Broadcast address (default: 255.255.255.255)
    */
@@ -56,6 +57,10 @@ class WakeOnLan {
   }
   /**
    * Send a single UDP broadcast packet
+   *
+   * @param packet
+   * @param broadcastAddress
+   * @param port
    */
   static async sendPacket(packet, broadcastAddress, port) {
     return new Promise((resolve, reject) => {
@@ -79,9 +84,11 @@ class WakeOnLan {
   }
   /**
    * Parse a MAC address string into a Buffer
+   *
+   * @param macAddress
    */
   static parseMacAddress(macAddress) {
-    const cleanMac = macAddress.replace(/[:\-]/g, "").toUpperCase();
+    const cleanMac = macAddress.replace(/[:-]/g, "").toUpperCase();
     if (cleanMac.length !== 12 || !/^[0-9A-F]+$/.test(cleanMac)) {
       throw new Error(`Invalid MAC address: ${macAddress}`);
     }
@@ -96,6 +103,8 @@ class WakeOnLan {
    * The magic packet consists of:
    * - 6 bytes of 0xFF (synchronization stream)
    * - Target MAC address repeated 16 times
+   *
+   * @param macBuffer
    */
   static createMagicPacket(macBuffer) {
     const packet = Buffer.alloc(6 + 16 * 6);
@@ -109,12 +118,14 @@ class WakeOnLan {
   }
   /**
    * Validate a MAC address format
+   *
+   * @param macAddress
    */
   static isValidMacAddress(macAddress) {
     if (!macAddress) {
       return false;
     }
-    const cleanMac = macAddress.replace(/[:\-]/g, "").toUpperCase();
+    const cleanMac = macAddress.replace(/[:-]/g, "").toUpperCase();
     return cleanMac.length === 12 && /^[0-9A-F]+$/.test(cleanMac);
   }
 }

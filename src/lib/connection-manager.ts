@@ -3,10 +3,11 @@
  * Supports both TCP/IP and Serial connections
  */
 
-import { EventEmitter } from 'events';
-import * as net from 'net';
+import { EventEmitter } from 'node:events';
+import * as net from 'node:net';
 import { SerialPort } from 'serialport';
-import { IiyamaResponse, IiyamaProtocol } from './iiyama-protocol';
+import type { IiyamaResponse } from './iiyama-protocol';
+import { IiyamaProtocol } from './iiyama-protocol';
 
 export interface ConnectionConfig {
 	type: 'tcp' | 'serial';
@@ -45,6 +46,8 @@ export class ConnectionManager extends EventEmitter {
 
 	/**
 	 * Enable or disable auto-reconnect
+	 *
+	 * @param enabled
 	 */
 	public setAutoReconnect(enabled: boolean): void {
 		this.autoReconnectEnabled = enabled;
@@ -80,6 +83,9 @@ export class ConnectionManager extends EventEmitter {
 
 	/**
 	 * Connect via TCP/IP
+	 *
+	 * @param resolve
+	 * @param reject
 	 */
 	private connectTCP(resolve: () => void, reject: (error: Error) => void): void {
 		if (!this.config.host || !this.config.port) {
@@ -87,7 +93,7 @@ export class ConnectionManager extends EventEmitter {
 		}
 
 		this.client = new net.Socket();
-		const tcpClient = this.client as net.Socket;
+		const tcpClient = this.client;
 
 		tcpClient.connect(this.config.port, this.config.host, () => {
 			this.connected = true;
@@ -126,6 +132,9 @@ export class ConnectionManager extends EventEmitter {
 
 	/**
 	 * Connect via Serial
+	 *
+	 * @param resolve
+	 * @param reject
 	 */
 	private connectSerial(resolve: () => void, reject: (error: Error) => void): void {
 		if (!this.config.serialPort || !this.config.baudRate) {
@@ -140,7 +149,7 @@ export class ConnectionManager extends EventEmitter {
 			stopBits: 1,
 		});
 
-		const serialClient = this.client as SerialPort;
+		const serialClient = this.client;
 
 		serialClient.on('open', () => {
 			this.connected = true;
@@ -168,6 +177,8 @@ export class ConnectionManager extends EventEmitter {
 
 	/**
 	 * Handle incoming data
+	 *
+	 * @param data
 	 */
 	private handleData(data: Buffer): void {
 		// DEBUG: Log received data
@@ -223,7 +234,9 @@ export class ConnectionManager extends EventEmitter {
 			// Parse response
 			const response = IiyamaProtocol.parseResponse(packet);
 			if (response) {
-				this.log.debug(`Valid response received: monitorId=${response.monitorId}, commandCode=0x${response.commandCode.toString(16)}, isAck=${response.isAck}, data=[${response.data}]`);
+				this.log.debug(
+					`Valid response received: monitorId=${response.monitorId}, commandCode=0x${response.commandCode.toString(16)}, isAck=${response.isAck}, data=[${response.data.join(',')}]`,
+				);
 				this.emit('response', response);
 			} else {
 				this.log.error(`Invalid response checksum! Packet: ${packet.toString('hex')}`);
@@ -234,6 +247,9 @@ export class ConnectionManager extends EventEmitter {
 
 	/**
 	 * Send command to display
+	 *
+	 * @param command
+	 * @param waitForResponse
 	 */
 	public async sendCommand(command: Buffer, waitForResponse = true): Promise<IiyamaResponse | null> {
 		if (!this.connected || !this.client) {
