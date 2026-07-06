@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "iiyama-prolite",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "news": {
+      "0.1.2": {
+        "en": "Create channel objects for info/volume/video/audio/commands so every state has an intermediate parent object (fixes repochecker E3009)",
+        "de": "Erstelle Kanalobjekte für Info/Lautstärke/Video/Audio/Befehle, sodass jeder Zustand ein übergeordnetes Zwischenobjekt hat (behebt Repochecker E3009).",
+        "ru": "Создайте объекты каналов для информации/громкости/видео/аудио/команд, чтобы каждое состояние имело промежуточный родительский объект (исправляет ошибку Repochecker E3009).",
+        "pt": "Crie objetos de canal para info/volume/video/audio/commands para que cada estado tenha um objeto pai intermediário (corrige o erro E3009 do repochecker).",
+        "nl": "Maak kanaalobjecten aan voor info/volume/video/audio/commando's, zodat elke status een tussenliggend ouderobject heeft (verhelpt repochecker E3009).",
+        "fr": "Créer des objets de canal pour les informations/volume/vidéo/audio/commandes afin que chaque état ait un objet parent intermédiaire (corrige l'erreur repochecker E3009)",
+        "it": "Creare oggetti canale per info/volume/video/audio/comandi in modo che ogni stato abbia un oggetto padre intermedio (corregge l'errore E3009 del repochecker)",
+        "es": "Crea objetos de canal para información/volumen/video/audio/comandos de modo que cada estado tenga un objeto padre intermedio (soluciona el error E3009 de repochecker).",
+        "pl": "Utwórz obiekty kanału dla informacji/głośności/wideo/audio/poleceń, aby każdy stan miał pośredni obiekt nadrzędny (naprawia błąd repochecker E3009)",
+        "uk": "Створити об'єкти каналу для інформації/гучності/відео/аудіо/команд, щоб кожен стан мав проміжний батьківський об'єкт (виправлення перевірки повторів E3009)",
+        "zh-cn": "为信息/音量/视频/音频/命令创建通道对象，以便每个状态都有一个中间父对象（修复 repochecker E3009）"
+      },
       "0.1.1": {
         "en": "Enabled automated npm publishing via GitHub Actions trusted publishing (OIDC)",
         "de": "Automatisierte npm-Veröffentlichung über GitHub Actions Trusted Publishing (OIDC) aktiviert",
