@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "iiyama-prolite",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "news": {
+      "0.1.3": {
+        "en": "Updated serialport dependency to 13.0.0",
+        "de": "Die Abhängigkeit von SerialPort wurde auf Version 13.0.0 aktualisiert.",
+        "ru": "Обновлена зависимость serialport до версии 13.0.0.",
+        "pt": "Dependência do serialport atualizada para a versão 13.0.0.",
+        "nl": "De afhankelijkheid van de seriële poort is bijgewerkt naar versie 13.0.0.",
+        "fr": "Dépendance serialport mise à jour vers la version 13.0.0",
+        "it": "Dipendenza seriale aggiornata alla versione 13.0.0",
+        "es": "Se actualizó la dependencia del puerto serie a la versión 13.0.0.",
+        "pl": "Zaktualizowano zależność portu szeregowego do wersji 13.0.0",
+        "uk": "Оновлено залежність послідовного порту до версії 13.0.0.",
+        "zh-cn": "已将串口依赖项更新至 13.0.0"
+      },
       "0.1.2": {
         "en": "Create channel objects for info/volume/video/audio/commands so every state has an intermediate parent object (fixes repochecker E3009)",
         "de": "Erstelle Kanalobjekte für Info/Lautstärke/Video/Audio/Befehle, sodass jeder Zustand ein übergeordnetes Zwischenobjekt hat (behebt Repochecker E3009).",
