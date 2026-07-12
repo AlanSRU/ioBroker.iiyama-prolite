@@ -69,7 +69,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: ioBroker/testing-action-deploy@v1
+      - uses: ioBroker/testing-action-deploy@v1.5.1
         with:
           node-version: '24.x'
           build: true
