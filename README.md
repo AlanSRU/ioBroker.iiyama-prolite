@@ -188,6 +188,10 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	Placeholder for the next version (at the beginning of the line):
 	### __WORK IN PROGRESS__
 -->
+
+### **WORK IN PROGRESS**
+- (ioBroker-Bot) Adapter requires admin >= 7.8.23 now.
+
 ### 0.1.3 (2026-07-06)
 * (Alan Paris) Updated serialport dependency to 13.0.0
 
