@@ -212,6 +212,8 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 * (Alan Paris) Wake-on-LAN support for Power Save Modes 3 and 4, with subnet-broadcast derivation
 * (Alan Paris) Automatic reconnection with slow standby polling to recover when a display is powered on
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 MIT License
 
