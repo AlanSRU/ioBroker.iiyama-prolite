@@ -189,6 +189,9 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	Placeholder for the next version (at the beginning of the line):
 	### __WORK IN PROGRESS__
 -->
+### __WORK IN PROGRESS__
+* (Alan Paris) Replaced the create-adapter placeholder icon with the official iiyama wordmark
+
 ### 0.1.4 (2026-07-16)
 * (Alan Paris) Removed the manufacturer protocol PDF from the repository and its git history
 * (Alan Paris) Added a 10 s TCP connection timeout so an unreachable display no longer hangs the connect
@@ -211,6 +214,14 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 * (Alan Paris) Power, input source, volume, video and audio control with status polling
 * (Alan Paris) Wake-on-LAN support for Power Save Modes 3 and 4, with subnet-broadcast derivation
 * (Alan Paris) Automatic reconnection with slow standby polling to recover when a display is powered on
+
+## Trademarks
+
+iiyama and ProLite are trademarks of iiyama Corporation. This adapter is an independent
+community project and is not affiliated with, endorsed by, or supported by iiyama Corporation.
+The adapter icon uses the official iiyama wordmark published in the
+[iiyama press materials](http://www.iiyama.com/gl_en/press-materials/), which is in the public
+domain (below the threshold of originality).
 
 ## License
 MIT License
