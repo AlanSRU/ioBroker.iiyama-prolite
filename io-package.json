@@ -133,9 +133,6 @@
     "type": "multimedia",
     "compact": true,
     "connectionType": "local",
-    "protectedNative": [
-      "macAddress"
-    ],
     "dataSource": "poll",
     "adminUI": {
       "config": "json"
@@ -151,6 +148,9 @@
       }
     ]
   },
+  "protectedNative": [
+    "macAddress"
+  ],
   "native": {
     "connectionType": "tcp",
     "host": "192.168.1.100",
