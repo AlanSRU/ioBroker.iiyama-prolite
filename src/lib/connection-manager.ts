@@ -39,9 +39,13 @@ export class ConnectionManager extends EventEmitter {
 	private connected = false;
 	private buffer = Buffer.alloc(0);
 	private responseTimeout: ioBroker.Timeout | undefined;
+	private consecutiveTimeouts = 0;
+	/** In-flight sendCommand awaiting a reply, so a disconnect can settle it instead of hanging. */
+	private pendingRequest: { reject: (error: Error) => void; cleanup: () => void } | undefined;
 	private reconnectTimeout: ioBroker.Timeout | undefined;
 	private connectTimeout: ioBroker.Timeout | undefined;
 	private standbyPollTimeout: ioBroker.Interval | undefined;
+	private connectPromise: Promise<void> | undefined;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 10;
 	private readonly reconnectDelay = 5000;
@@ -65,9 +69,14 @@ export class ConnectionManager extends EventEmitter {
 	 */
 	public setAutoReconnect(enabled: boolean): void {
 		this.autoReconnectEnabled = enabled;
-		if (!enabled && this.reconnectTimeout) {
-			this.adapter.clearTimeout(this.reconnectTimeout);
-			this.reconnectTimeout = undefined;
+		if (!enabled) {
+			if (this.reconnectTimeout) {
+				this.adapter.clearTimeout(this.reconnectTimeout);
+				this.reconnectTimeout = undefined;
+			}
+			// Standby polling calls connect() too, so leaving it running would race the caller
+			// that just took ownership of the connection (the WOL wake sequence does exactly this).
+			this.stopStandbyPolling();
 		}
 	}
 
@@ -82,17 +91,31 @@ export class ConnectionManager extends EventEmitter {
 	 * Connect to the display
 	 */
 	public async connect(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			if (this.connected) {
-				return resolve();
-			}
+		if (this.connected) {
+			return;
+		}
 
+		// Reuse an attempt that is already running. The WOL retry loop and the standby poll tick
+		// can both call connect() while one is in flight; each would otherwise build its own
+		// socket and overwrite this.client, leaving the earlier one ESTABLISHED but unreferenced.
+		// disconnect() only destroys the current client, so that socket would never be closed.
+		if (this.connectPromise) {
+			return this.connectPromise;
+		}
+
+		this.connectPromise = new Promise<void>((resolve, reject) => {
 			if (this.config.type === 'tcp') {
 				this.connectTCP(resolve, reject);
 			} else {
 				this.connectSerial(resolve, reject);
 			}
 		});
+
+		try {
+			await this.connectPromise;
+		} finally {
+			this.connectPromise = undefined;
+		}
 	}
 
 	/**
@@ -202,14 +225,30 @@ export class ConnectionManager extends EventEmitter {
 			this.handleData(data);
 		});
 
+		// serialport emits ONLY 'error' when opening the port fails - never 'close'. Since
+		// handleDisconnect() is the sole scheduler of both the reconnect chain and standby
+		// polling, an open failure would otherwise leave the adapter idle for good: a dongle
+		// enumerated after ioBroker starts, or a missing dialout group membership, would never
+		// recover without a manual instance restart. TCP does not need this because the socket
+		// always emits 'close' after an error.
+		let openFailureHandled = false;
+
 		serialClient.on('error', (error: Error) => {
 			this.emit('error', error);
 			if (!this.connected) {
 				reject(error);
+				if (!openFailureHandled) {
+					openFailureHandled = true;
+					this.handleDisconnect();
+				}
 			}
 		});
 
 		serialClient.on('close', () => {
+			// Skip if the open already failed, so the retry is scheduled exactly once.
+			if (openFailureHandled) {
+				return;
+			}
 			this.handleDisconnect();
 		});
 	}
@@ -289,31 +328,72 @@ export class ConnectionManager extends EventEmitter {
 	 *
 	 * @param command
 	 * @param waitForResponse
+	 * @param expectedCode - Command code the reply must carry. Replies with any other code are
+	 *   ignored rather than resolving this request (see correlation note below).
 	 */
-	public async sendCommand(command: Buffer, waitForResponse = true): Promise<IiyamaResponse | null> {
+	public async sendCommand(
+		command: Buffer,
+		waitForResponse = true,
+		expectedCode?: number,
+	): Promise<IiyamaResponse | null> {
 		if (!this.connected || !this.client) {
 			throw new Error('Not connected');
 		}
 
 		return new Promise((resolve, reject) => {
+			// Settled by whichever of resolve/reject/timeout/disconnect happens first.
+			const finish = (): void => {
+				if (this.responseTimeout) {
+					this.adapter.clearTimeout(this.responseTimeout);
+					this.responseTimeout = undefined;
+				}
+				this.pendingRequest?.cleanup();
+				this.pendingRequest = undefined;
+			};
+
 			if (waitForResponse) {
 				// Set up response handler
 				const onResponse = (response: IiyamaResponse): void => {
-					if (this.responseTimeout) {
-						this.adapter.clearTimeout(this.responseTimeout);
-						this.responseTimeout = undefined;
+					// Correlate the reply with the request. After a response timeout a late reply can
+					// still arrive while the *next* command is already waiting on its own listener,
+					// which would otherwise resolve that command with the previous command's payload
+					// and write the wrong value into its state.
+					if (expectedCode !== undefined && response.commandCode !== expectedCode) {
+						this.log.debug(
+							`Ignoring response 0x${response.commandCode.toString(16)} while waiting for 0x${expectedCode.toString(16)}`,
+						);
+						return; // keep waiting for a matching reply, or the timeout
 					}
-					this.removeListener('response', onResponse);
+					this.consecutiveTimeouts = 0;
+					finish();
 					resolve(response);
 				};
 
-				this.once('response', onResponse);
+				this.on('response', onResponse);
+				this.pendingRequest = {
+					reject,
+					cleanup: () => this.removeListener('response', onResponse),
+				};
 
 				// Set timeout for response
 				this.responseTimeout = this.adapter.setTimeout(() => {
-					this.log.error('Response timeout! No valid response received within 5000ms');
-					this.log.error(`Current buffer: ${this.buffer.toString('hex')} (${this.buffer.length} bytes)`);
-					this.removeListener('response', onResponse);
+					// A display that accepts TCP but never answers the protocol (a mismatched monitor
+					// ID is the common cause) would otherwise log two error lines per command on every
+					// poll cycle, indefinitely. Report the first loudly, then demote until a reply lands.
+					if (this.consecutiveTimeouts === 0) {
+						this.log.error('Response timeout! No valid response received within 5000ms');
+						this.log.error(`Current buffer: ${this.buffer.toString('hex')} (${this.buffer.length} bytes)`);
+					} else {
+						this.log.debug(
+							`Response timeout (${this.consecutiveTimeouts + 1} consecutive). ` +
+								`Buffer: ${this.buffer.toString('hex')} (${this.buffer.length} bytes)`,
+						);
+					}
+					this.consecutiveTimeouts++;
+					// Drop any partial frame: whatever is buffered belongs to a request that has
+					// already been abandoned, and keeping it would corrupt the next parse.
+					this.buffer = Buffer.alloc(0);
+					finish();
 					reject(new Error('Response timeout'));
 				}, 5000);
 			}
@@ -321,33 +401,45 @@ export class ConnectionManager extends EventEmitter {
 			// DEBUG: Log command being sent
 			this.log.debug(`Sending command: ${command.toString('hex')} (${command.length} bytes)`);
 
+			const onWriteComplete = (error: Error | null | undefined): void => {
+				if (error) {
+					finish();
+					reject(error);
+				} else if (!waitForResponse) {
+					resolve(null);
+				}
+			};
+
 			// Send command
 			if (this.config.type === 'tcp') {
-				(this.client as net.Socket).write(command, (error: Error | null | undefined) => {
-					if (error) {
-						if (this.responseTimeout) {
-							this.adapter.clearTimeout(this.responseTimeout);
-							this.responseTimeout = undefined;
-						}
-						reject(error);
-					} else if (!waitForResponse) {
-						resolve(null);
-					}
-				});
+				(this.client as net.Socket).write(command, onWriteComplete);
 			} else {
-				(this.client as SerialPort).write(command, (error: Error | null | undefined) => {
-					if (error) {
-						if (this.responseTimeout) {
-							this.adapter.clearTimeout(this.responseTimeout);
-							this.responseTimeout = undefined;
-						}
-						reject(error);
-					} else if (!waitForResponse) {
-						resolve(null);
-					}
-				});
+				(this.client as SerialPort).write(command, onWriteComplete);
 			}
 		});
+	}
+
+	/**
+	 * Reject an in-flight sendCommand so its caller cannot wait forever.
+	 *
+	 * Disconnecting clears the response timeout, so without this the promise would never settle:
+	 * processQueue would stay awaiting it, processingQueue would remain true, and every later poll
+	 * cycle would be dropped by the "previous cycle still processing" guard until a restart.
+	 *
+	 * @param reason - Message for the rejection error
+	 */
+	private settlePendingRequest(reason: string): void {
+		if (this.responseTimeout) {
+			this.adapter.clearTimeout(this.responseTimeout);
+			this.responseTimeout = undefined;
+		}
+
+		const pending = this.pendingRequest;
+		this.pendingRequest = undefined;
+		if (pending) {
+			pending.cleanup();
+			pending.reject(new Error(reason));
+		}
 	}
 
 	/**
@@ -357,10 +449,7 @@ export class ConnectionManager extends EventEmitter {
 		const wasConnected = this.connected;
 		this.connected = false;
 
-		if (this.responseTimeout) {
-			this.adapter.clearTimeout(this.responseTimeout);
-			this.responseTimeout = undefined;
-		}
+		this.settlePendingRequest('Connection closed while awaiting response');
 
 		if (wasConnected) {
 			this.emit('disconnected');
@@ -396,7 +485,10 @@ export class ConnectionManager extends EventEmitter {
 				return;
 			}
 			this.log.debug('Standby poll: checking if display is reachable...');
-			this.reconnectAttempts = 0;
+			// Do NOT reset reconnectAttempts here. Doing so lifts the maxReconnectAttempts cap on
+			// every tick, so handleDisconnect starts a fresh 5 s reconnect chain each time and the
+			// slow standby cadence never actually replaces the fast loop. A successful connect
+			// resets the counter on its own.
 			this.connect().catch(() => {
 				// Expected when display is still off
 			});
@@ -429,10 +521,7 @@ export class ConnectionManager extends EventEmitter {
 			this.connectTimeout = undefined;
 		}
 
-		if (this.responseTimeout) {
-			this.adapter.clearTimeout(this.responseTimeout);
-			this.responseTimeout = undefined;
-		}
+		this.settlePendingRequest('Disconnected while awaiting response');
 
 		if (this.client) {
 			if (this.config.type === 'tcp') {

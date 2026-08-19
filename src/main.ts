@@ -6,15 +6,23 @@
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 import { ConnectionManager } from './lib/connection-manager';
-import { IiyamaProtocol, InputSource } from './lib/iiyama-protocol';
+import { CommandCode, IiyamaProtocol, InputSource } from './lib/iiyama-protocol';
 import { WakeOnLan } from './lib/wake-on-lan';
 
 class Iiyama extends utils.Adapter {
 	private connection: ConnectionManager | null = null;
 	private pollInterval: ioBroker.Interval | undefined;
-	private commandQueue: Array<() => Promise<void>> = [];
+	private commandQueue: Array<{ run: () => Promise<void>; revertIds?: string[] }> = [];
 	private processingQueue = false;
 	private wolInProgress = false; // Flag to prevent polling during WOL wake sequence
+	/** Last value the display confirmed, used to roll a control back when a command fails. */
+	private lastAcked = new Map<string, ioBroker.StateValue>();
+	private consecutiveCommandFailures = 0;
+	private connectionDegraded = false;
+	private readonly maxCommandFailures = 3; // Consecutive failures before info.connection is cleared
+	private readonly failureDrainMs = 1000; // Quiet window after a failure, to absorb a late reply
+	private standbyReported = false; // Log the 'display is off' notice once per standby period
+	private consecutiveConnectionErrors = 0; // Report a repeating connection error once, then demote
 
 	public constructor(options: Partial<utils.AdapterOptions> = {}) {
 		super({
@@ -97,7 +105,7 @@ class Iiyama extends utils.Adapter {
 			commands: 'Commands',
 		};
 		for (const [id, name] of Object.entries(channels)) {
-			await this.setObjectNotExistsAsync(id, {
+			await this.extendObject(id, {
 				type: 'channel',
 				common: { name },
 				native: {},
@@ -105,7 +113,7 @@ class Iiyama extends utils.Adapter {
 		}
 
 		// Connection state - tracks actual device connectivity
-		await this.setObjectNotExistsAsync('info.connection', {
+		await this.extendObject('info.connection', {
 			type: 'state',
 			common: {
 				name: 'Connection status',
@@ -119,7 +127,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Standby state (display is off/unreachable but adapter is working)
-		await this.setObjectNotExistsAsync('info.standby', {
+		await this.extendObject('info.standby', {
 			type: 'state',
 			common: {
 				name: 'Display in standby',
@@ -133,7 +141,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Power control
-		await this.setObjectNotExistsAsync('power', {
+		await this.extendObject('power', {
 			type: 'state',
 			common: {
 				name: 'Power',
@@ -147,7 +155,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Input source
-		await this.setObjectNotExistsAsync('inputSource', {
+		await this.extendObject('inputSource', {
 			type: 'state',
 			common: {
 				name: 'Input Source',
@@ -173,7 +181,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Volume
-		await this.setObjectNotExistsAsync('volume.main', {
+		await this.extendObject('volume.main', {
 			type: 'state',
 			common: {
 				name: 'Main Volume',
@@ -189,7 +197,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('volume.audioOut', {
+		await this.extendObject('volume.audioOut', {
 			type: 'state',
 			common: {
 				name: 'Audio Out Volume',
@@ -206,7 +214,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Video parameters
-		await this.setObjectNotExistsAsync('video.brightness', {
+		await this.extendObject('video.brightness', {
 			type: 'state',
 			common: {
 				name: 'Brightness',
@@ -222,7 +230,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.contrast', {
+		await this.extendObject('video.contrast', {
 			type: 'state',
 			common: {
 				name: 'Contrast',
@@ -238,7 +246,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.color', {
+		await this.extendObject('video.color', {
 			type: 'state',
 			common: {
 				name: 'Color',
@@ -254,7 +262,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.sharpness', {
+		await this.extendObject('video.sharpness', {
 			type: 'state',
 			common: {
 				name: 'Sharpness',
@@ -270,7 +278,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.tint', {
+		await this.extendObject('video.tint', {
 			type: 'state',
 			common: {
 				name: 'Tint',
@@ -286,7 +294,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.blackLevel', {
+		await this.extendObject('video.blackLevel', {
 			type: 'state',
 			common: {
 				name: 'Black Level',
@@ -302,7 +310,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('video.gamma', {
+		await this.extendObject('video.gamma', {
 			type: 'state',
 			common: {
 				name: 'Gamma',
@@ -323,7 +331,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Color temperature
-		await this.setObjectNotExistsAsync('video.colorTemperature', {
+		await this.extendObject('video.colorTemperature', {
 			type: 'state',
 			common: {
 				name: 'Color Temperature',
@@ -349,7 +357,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Picture format
-		await this.setObjectNotExistsAsync('video.pictureFormat', {
+		await this.extendObject('video.pictureFormat', {
 			type: 'state',
 			common: {
 				name: 'Picture Format',
@@ -372,7 +380,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Audio parameters
-		await this.setObjectNotExistsAsync('audio.treble', {
+		await this.extendObject('audio.treble', {
 			type: 'state',
 			common: {
 				name: 'Treble',
@@ -387,7 +395,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('audio.bass', {
+		await this.extendObject('audio.bass', {
 			type: 'state',
 			common: {
 				name: 'Bass',
@@ -403,7 +411,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Information
-		await this.setObjectNotExistsAsync('info.operatingHours', {
+		await this.extendObject('info.operatingHours', {
 			type: 'state',
 			common: {
 				name: 'Operating Hours',
@@ -417,7 +425,7 @@ class Iiyama extends utils.Adapter {
 			native: {},
 		});
 
-		await this.setObjectNotExistsAsync('info.serialCode', {
+		await this.extendObject('info.serialCode', {
 			type: 'state',
 			common: {
 				name: 'Serial Code',
@@ -431,7 +439,7 @@ class Iiyama extends utils.Adapter {
 		});
 
 		// Commands
-		await this.setObjectNotExistsAsync('commands.autoAdjust', {
+		await this.extendObject('commands.autoAdjust', {
 			type: 'state',
 			common: {
 				name: 'Auto Adjust (VGA only)',
@@ -450,8 +458,8 @@ class Iiyama extends utils.Adapter {
 	 */
 	private async initConnection(): Promise<void> {
 		// Initialize device states
-		await this.setState('info.connection', false, true);
-		await this.setState('info.standby', false, true);
+		await this.ackState('info.connection', false);
+		await this.ackState('info.standby', false);
 
 		try {
 			this.connection = new ConnectionManager(
@@ -467,6 +475,14 @@ class Iiyama extends utils.Adapter {
 
 			this.connection.on('connected', () => {
 				this.log.info('Connected to display');
+				// Start the failure tracking fresh. The handler below reports the link as up, so
+				// leaving connectionDegraded latched would block onCommandFailure from ever
+				// clearing info.connection again - a display that reconnects but still answers
+				// nothing (a mismatched monitor ID does this) would read as healthy forever.
+				this.consecutiveCommandFailures = 0;
+				this.connectionDegraded = false;
+				this.standbyReported = false;
+				this.consecutiveConnectionErrors = 0;
 				this.setState('info.connection', true, true);
 				this.setState('info.standby', false, true);
 				// Don't start polling during WOL wake sequence - it will be started after power command
@@ -481,14 +497,26 @@ class Iiyama extends utils.Adapter {
 
 			this.connection.on('disconnected', () => {
 				this.log.info('Disconnected from display');
+				this.consecutiveCommandFailures = 0;
+				this.connectionDegraded = false;
 				this.setState('info.connection', false, true);
 				this.stopPolling();
 			});
 
 			this.connection.on('error', (error: Error) => {
-				// EHOSTUNREACH is expected when display is off/in standby - log as debug
-				if (error.message.includes('EHOSTUNREACH') || error.message.includes('ECONNREFUSED')) {
-					this.log.debug(`Connection error (display may be off): ${error.message}`);
+				// EHOSTUNREACH/ECONNREFUSED are expected while a display is off or in standby.
+				const expected = error.message.includes('EHOSTUNREACH') || error.message.includes('ECONNREFUSED');
+				this.consecutiveConnectionErrors++;
+
+				// Every other repeating failure in the adapter reports once and then demotes; this
+				// path needs the same treatment. A serial port that cannot be opened (dongle
+				// unplugged, wrong path, missing dialout group) retries ten times and then once
+				// every 30 s indefinitely, which would otherwise be ~2,880 error lines a day and a
+				// permanently lit error badge in admin.
+				if (expected || this.consecutiveConnectionErrors > 1) {
+					this.log.debug(
+						`Connection error (${this.consecutiveConnectionErrors} consecutive, display may be off): ${error.message}`,
+					);
 				} else {
 					this.log.error(`Connection error: ${error.message}`);
 				}
@@ -499,8 +527,17 @@ class Iiyama extends utils.Adapter {
 			});
 
 			this.connection.on('maxReconnectReached', () => {
+				// Fires again on every standby poll cycle for as long as the display stays off, so
+				// report it once. A display switched off overnight would otherwise log ~2,880
+				// identical lines and write info.standby just as often, inflating any history on it.
+				if (this.standbyReported) {
+					return;
+				}
+
+				this.standbyReported = true;
 				this.log.info(
-					'Max reconnection attempts reached - display appears to be off. Will reconnect on power-on command.',
+					'Max reconnection attempts reached - display appears to be off. ' +
+						'The adapter keeps checking and reconnects automatically when it comes back on.',
 				);
 				this.setState('info.standby', true, true);
 			});
@@ -582,12 +619,26 @@ class Iiyama extends utils.Adapter {
 	}
 
 	/**
+	 * Write a value the display has confirmed, remembering it so a later failed command can
+	 * roll the control back to it.
+	 *
+	 * @param id - State id, relative to the instance namespace
+	 * @param value - The confirmed value
+	 */
+	private async ackState(id: string, value: ioBroker.StateValue): Promise<void> {
+		this.lastAcked.set(id, value);
+		await this.setState(id, value, true);
+	}
+
+	/**
 	 * Queue a command for execution
 	 *
 	 * @param command
+	 * @param revertIds - States to roll back to their last confirmed values if the command fails,
+	 *   so the UI does not keep showing values the display never accepted.
 	 */
-	private queueCommand(command: () => Promise<void>): void {
-		this.commandQueue.push(command);
+	private queueCommand(command: () => Promise<void>, revertIds?: string[]): void {
+		this.commandQueue.push({ run: command, revertIds });
 		this.processQueue();
 	}
 
@@ -602,19 +653,81 @@ class Iiyama extends utils.Adapter {
 		this.processingQueue = true;
 
 		while (this.commandQueue.length > 0) {
-			const command = this.commandQueue.shift();
-			if (command) {
+			const entry = this.commandQueue.shift();
+			if (entry) {
 				try {
-					await command();
+					await entry.run();
+					this.onCommandSuccess();
 					// Small delay between commands
 					await this.delay(100);
 				} catch (error) {
-					this.log.error(`Error executing command: ${(error as Error).message}`);
+					await this.onCommandFailure(entry.revertIds, error as Error);
+					// Let a late reply to the command that just failed land while nothing is
+					// waiting for it, so it is discarded instead of resolving the NEXT command.
+					// Read commands are correlated by command code, but the protocol spec does not
+					// document the reply code for write commands, so those cannot be matched the
+					// same way - this quiet window is what protects them.
+					await this.delay(this.failureDrainMs);
 				}
 			}
 		}
 
 		this.processingQueue = false;
+	}
+
+	/**
+	 * Note that the display answered, clearing any degraded state.
+	 */
+	private onCommandSuccess(): void {
+		this.consecutiveCommandFailures = 0;
+
+		if (this.connectionDegraded) {
+			this.connectionDegraded = false;
+			this.log.info('Display is responding again');
+			void this.ackState('info.connection', true);
+			void this.ackState('info.standby', false);
+		}
+	}
+
+	/**
+	 * Handle a command that could not be delivered or was never answered.
+	 *
+	 * @param revertIds - States to roll back to their last confirmed values, if any
+	 * @param error - The failure
+	 */
+	private async onCommandFailure(revertIds: string[] | undefined, error: Error): Promise<void> {
+		this.consecutiveCommandFailures++;
+
+		// Report the first failure of a run loudly, then demote. An unresponsive display would
+		// otherwise emit one error line per command on every poll cycle, indefinitely.
+		if (this.consecutiveCommandFailures === 1) {
+			this.log.error(`Error executing command: ${error.message}`);
+		} else {
+			this.log.debug(
+				`Error executing command (${this.consecutiveCommandFailures} consecutive): ${error.message}`,
+			);
+		}
+
+		// Roll the control back, so a switch or slider does not sit there showing a value the
+		// display never accepted with nothing to correct it.
+		for (const id of revertIds ?? []) {
+			if (this.lastAcked.has(id)) {
+				await this.setState(id, this.lastAcked.get(id)!, true);
+			}
+		}
+
+		// The socket can be up while the display answers nothing at all - a monitor ID that does
+		// not match the display does exactly this - so socket state alone is not a liveness
+		// signal. Require several consecutive failures so one timeout cannot flap the flag.
+		if (!this.connectionDegraded && this.consecutiveCommandFailures >= this.maxCommandFailures) {
+			this.connectionDegraded = true;
+			this.log.warn(
+				`Display has not answered ${this.consecutiveCommandFailures} consecutive commands - ` +
+					`marking the connection as down (check that Monitor ID ${this.config.monitorId} matches the display)`,
+			);
+			await this.ackState('info.connection', false);
+			await this.ackState('info.standby', true);
+		}
 	}
 
 	/**
@@ -626,12 +739,12 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetPowerCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.POWER_STATE_GET);
 
 		if (response) {
 			const powerOn = IiyamaProtocol.parsePowerState(response);
 			if (powerOn !== null) {
-				await this.setState('power', powerOn, true);
+				await this.ackState('power', powerOn);
 			}
 		}
 	}
@@ -645,12 +758,12 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetCurrentSourceCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.CURRENT_SOURCE_GET);
 
 		if (response) {
 			const source = IiyamaProtocol.parseInputSource(response);
 			if (source !== null) {
-				await this.setState('inputSource', source, true);
+				await this.ackState('inputSource', source);
 			}
 		}
 	}
@@ -664,13 +777,13 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetVolumeCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.VOLUME_GET);
 
 		if (response) {
 			const volume = IiyamaProtocol.parseVolume(response);
 			if (volume) {
-				await this.setState('volume.main', volume.volume, true);
-				await this.setState('volume.audioOut', volume.audioOut, true);
+				await this.ackState('volume.main', volume.volume);
+				await this.ackState('volume.audioOut', volume.audioOut);
 			}
 		}
 	}
@@ -684,18 +797,18 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetVideoParamsCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.VIDEO_PARAMS_GET);
 
 		if (response) {
 			const params = IiyamaProtocol.parseVideoParams(response);
 			if (params) {
-				await this.setState('video.brightness', params.brightness, true);
-				await this.setState('video.color', params.color, true);
-				await this.setState('video.contrast', params.contrast, true);
-				await this.setState('video.sharpness', params.sharpness, true);
-				await this.setState('video.tint', params.tint, true);
-				await this.setState('video.blackLevel', params.blackLevel, true);
-				await this.setState('video.gamma', params.gamma, true);
+				await this.ackState('video.brightness', params.brightness);
+				await this.ackState('video.color', params.color);
+				await this.ackState('video.contrast', params.contrast);
+				await this.ackState('video.sharpness', params.sharpness);
+				await this.ackState('video.tint', params.tint);
+				await this.ackState('video.blackLevel', params.blackLevel);
+				await this.ackState('video.gamma', params.gamma);
 			}
 		}
 	}
@@ -709,10 +822,10 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetColorTempCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.COLOR_TEMP_GET);
 
 		if (response && response.data.length >= 1) {
-			await this.setState('video.colorTemperature', response.data[0], true);
+			await this.ackState('video.colorTemperature', response.data[0]);
 		}
 	}
 
@@ -725,10 +838,10 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetPictureFormatCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.PICTURE_FORMAT_GET);
 
 		if (response && response.data.length >= 1) {
-			await this.setState('video.pictureFormat', response.data[0], true);
+			await this.ackState('video.pictureFormat', response.data[0]);
 		}
 	}
 
@@ -741,11 +854,11 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetAudioParamsCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.AUDIO_PARAMS_GET);
 
 		if (response && response.data.length >= 2) {
-			await this.setState('audio.treble', response.data[0], true);
-			await this.setState('audio.bass', response.data[1], true);
+			await this.ackState('audio.treble', response.data[0]);
+			await this.ackState('audio.bass', response.data[1]);
 		}
 	}
 
@@ -758,12 +871,12 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetOperatingHoursCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.OPERATING_HOURS_GET);
 
 		if (response) {
 			const hours = IiyamaProtocol.parseOperatingHours(response);
 			if (hours !== null) {
-				await this.setState('info.operatingHours', hours, true);
+				await this.ackState('info.operatingHours', hours);
 			}
 		}
 	}
@@ -777,12 +890,12 @@ class Iiyama extends utils.Adapter {
 		}
 
 		const cmd = IiyamaProtocol.buildGetSerialCodeCommand(this.config.monitorId);
-		const response = await this.connection.sendCommand(cmd);
+		const response = await this.connection.sendCommand(cmd, true, CommandCode.SERIAL_CODE_GET);
 
 		if (response) {
 			const serialCode = IiyamaProtocol.parseSerialCode(response);
 			if (serialCode !== null) {
-				await this.setState('info.serialCode', serialCode, true);
+				await this.ackState('info.serialCode', serialCode);
 			}
 		}
 	}
@@ -916,24 +1029,36 @@ class Iiyama extends utils.Adapter {
 
 		// Check if network power-on is possible
 		if (powerOn && this.config.connectionType === 'tcp') {
+			// Modes 1 and 2 govern how an OFF display can be woken, so they only apply when the
+			// display is actually unreachable. With the socket up the display is already on and
+			// the power command is simply sent below - otherwise a scene asserting power=true on
+			// a display that is on would warn and drive the state to false until the next poll.
+			// (Modes 3/4 are deliberately not gated this way: with WOL enabled the display keeps
+			// its LAN interface alive in standby, so the socket can be up while it is off.)
+			const displayReachable = this.connection.isConnected();
+
 			// Mode 1: WOL off, source input wake off - cannot wake via network at all
-			if (powerSaveMode === 1) {
+			if (powerSaveMode === 1 && !displayReachable) {
 				this.log.warn(
 					`Power Save Mode ${powerSaveMode}: Cannot wake display via network. ` +
 						`WOL and source input wake are both disabled. ` +
 						`Please use IR remote/front panel button to wake the display, ` +
 						`or change to Mode 3 or 4 (WOL enabled) in display settings.`,
 				);
+				// The display stays off, so snap the control back - nothing else will correct it
+				// while the socket is down and polling is stopped.
+				await this.ackState('power', false);
 				return;
 			}
 
 			// Mode 2: WOL off, source input wake on - can only wake by providing a source signal
-			if (powerSaveMode === 2) {
+			if (powerSaveMode === 2 && !displayReachable) {
 				this.log.warn(
 					`Power Save Mode ${powerSaveMode}: Cannot wake display via network command. ` +
 						`WOL is disabled. Display will only wake when it detects a source input signal. ` +
 						`Change to Mode 3 or 4 (WOL enabled) for network wake capability.`,
 				);
+				await this.ackState('power', false);
 				return;
 			}
 
@@ -991,7 +1116,9 @@ class Iiyama extends utils.Adapter {
 							this.connection.setAutoReconnect(true);
 
 							if (!connected) {
-								this.wolInProgress = false;
+								this.endWolSequence();
+								// The display never came back, so the switch must not stay on.
+								await this.ackState('power', false);
 								return;
 							}
 
@@ -1003,7 +1130,7 @@ class Iiyama extends utils.Adapter {
 						this.log.warn(`Failed to send WOL packet: ${(error as Error).message}`);
 						// Re-enable auto-reconnect in case of error
 						this.connection.setAutoReconnect(true);
-						this.wolInProgress = false;
+						this.endWolSequence();
 					}
 				} else {
 					this.log.warn(`Invalid MAC address configured: ${this.redactMac(this.config.macAddress)}`);
@@ -1012,17 +1139,40 @@ class Iiyama extends utils.Adapter {
 		}
 
 		this.queueCommand(async () => {
-			const cmd = IiyamaProtocol.buildPowerCommand(this.config.monitorId, powerOn);
-			await this.connection!.sendCommand(cmd);
-			await this.setState('power', powerOn, true);
-
-			// If this was a WOL power-on, now start polling
-			if (this.wolInProgress) {
-				this.wolInProgress = false;
-				this.log.info('WOL sequence complete, starting polling');
-				this.startPolling();
+			try {
+				const cmd = IiyamaProtocol.buildPowerCommand(this.config.monitorId, powerOn);
+				await this.connection!.sendCommand(cmd);
+				await this.ackState('power', powerOn);
+			} finally {
+				// Must run even when the power command fails. The WOL branch stopped polling and
+				// set wolInProgress; if a failure left that flag set, the 'connected' handler
+				// (gated on !wolInProgress) could never restart polling either, so the instance
+				// would go silent until it was restarted by hand.
+				this.endWolSequence();
 			}
-		});
+		}, ['power']);
+	}
+
+	/**
+	 * Clear the WOL guard and resume polling, if a WOL sequence was in progress.
+	 *
+	 * Safe to call unconditionally and more than once.
+	 */
+	private endWolSequence(): void {
+		if (!this.wolInProgress) {
+			return;
+		}
+
+		this.wolInProgress = false;
+
+		if (this.connection?.isConnected()) {
+			this.log.info('WOL sequence finished, resuming polling');
+			this.startPolling();
+		} else {
+			// Not connected: leave polling stopped. Clearing the flag is what matters - the
+			// 'connected' handler is gated on it and will start polling once the display is back.
+			this.log.debug('WOL sequence finished while disconnected; polling resumes on reconnect');
+		}
 	}
 
 	/**
@@ -1038,8 +1188,8 @@ class Iiyama extends utils.Adapter {
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildInputSourceCommand(this.config.monitorId, source);
 			await this.connection!.sendCommand(cmd);
-			await this.setState('inputSource', source, true);
-		});
+			await this.ackState('inputSource', source);
+		}, ['inputSource']);
 	}
 
 	/**
@@ -1060,9 +1210,9 @@ class Iiyama extends utils.Adapter {
 			this.queueCommand(async () => {
 				const cmd = IiyamaProtocol.buildVolumeCommand(this.config.monitorId, main, audioOut);
 				await this.connection!.sendCommand(cmd);
-				await this.setState('volume.main', main, true);
-				await this.setState('volume.audioOut', audioOut, true);
-			});
+				await this.ackState('volume.main', main);
+				await this.ackState('volume.audioOut', audioOut);
+			}, ['volume.main', 'volume.audioOut']);
 		}
 	}
 
@@ -1103,14 +1253,22 @@ class Iiyama extends utils.Adapter {
 					gamma,
 				);
 				await this.connection!.sendCommand(cmd);
-				await this.setState('video.brightness', brightness, true);
-				await this.setState('video.color', color, true);
-				await this.setState('video.contrast', contrast, true);
-				await this.setState('video.sharpness', sharpness, true);
-				await this.setState('video.tint', tint, true);
-				await this.setState('video.blackLevel', blackLevel, true);
-				await this.setState('video.gamma', gamma, true);
-			});
+				await this.ackState('video.brightness', brightness);
+				await this.ackState('video.color', color);
+				await this.ackState('video.contrast', contrast);
+				await this.ackState('video.sharpness', sharpness);
+				await this.ackState('video.tint', tint);
+				await this.ackState('video.blackLevel', blackLevel);
+				await this.ackState('video.gamma', gamma);
+			}, [
+				'video.brightness',
+				'video.color',
+				'video.contrast',
+				'video.sharpness',
+				'video.tint',
+				'video.blackLevel',
+				'video.gamma',
+			]);
 		}
 	}
 
@@ -1127,8 +1285,8 @@ class Iiyama extends utils.Adapter {
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildColorTempCommand(this.config.monitorId, temp);
 			await this.connection!.sendCommand(cmd);
-			await this.setState('video.colorTemperature', temp, true);
-		});
+			await this.ackState('video.colorTemperature', temp);
+		}, ['video.colorTemperature']);
 	}
 
 	/**
@@ -1144,8 +1302,8 @@ class Iiyama extends utils.Adapter {
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildPictureFormatCommand(this.config.monitorId, format);
 			await this.connection!.sendCommand(cmd);
-			await this.setState('video.pictureFormat', format, true);
-		});
+			await this.ackState('video.pictureFormat', format);
+		}, ['video.pictureFormat']);
 	}
 
 	/**
@@ -1163,9 +1321,9 @@ class Iiyama extends utils.Adapter {
 			this.queueCommand(async () => {
 				const cmd = IiyamaProtocol.buildAudioParamsCommand(this.config.monitorId, treble, bass);
 				await this.connection!.sendCommand(cmd);
-				await this.setState('audio.treble', treble, true);
-				await this.setState('audio.bass', bass, true);
-			});
+				await this.ackState('audio.treble', treble);
+				await this.ackState('audio.bass', bass);
+			}, ['audio.treble', 'audio.bass']);
 		}
 	}
 
@@ -1180,7 +1338,7 @@ class Iiyama extends utils.Adapter {
 		this.queueCommand(async () => {
 			const cmd = IiyamaProtocol.buildAutoAdjustCommand(this.config.monitorId);
 			await this.connection!.sendCommand(cmd, false);
-			await this.setState('commands.autoAdjust', false, true);
+			await this.ackState('commands.autoAdjust', false);
 		});
 	}
 }

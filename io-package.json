@@ -120,6 +120,9 @@
     "type": "multimedia",
     "compact": true,
     "connectionType": "local",
+    "protectedNative": [
+      "macAddress"
+    ],
     "dataSource": "poll",
     "adminUI": {
       "config": "json"

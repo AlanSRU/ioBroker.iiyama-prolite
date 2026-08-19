@@ -46,9 +46,13 @@ class ConnectionManager extends import_node_events.EventEmitter {
   connected = false;
   buffer = Buffer.alloc(0);
   responseTimeout;
+  consecutiveTimeouts = 0;
+  /** In-flight sendCommand awaiting a reply, so a disconnect can settle it instead of hanging. */
+  pendingRequest;
   reconnectTimeout;
   connectTimeout;
   standbyPollTimeout;
+  connectPromise;
   reconnectAttempts = 0;
   maxReconnectAttempts = 10;
   reconnectDelay = 5e3;
@@ -65,9 +69,12 @@ class ConnectionManager extends import_node_events.EventEmitter {
    */
   setAutoReconnect(enabled) {
     this.autoReconnectEnabled = enabled;
-    if (!enabled && this.reconnectTimeout) {
-      this.adapter.clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = void 0;
+    if (!enabled) {
+      if (this.reconnectTimeout) {
+        this.adapter.clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = void 0;
+      }
+      this.stopStandbyPolling();
     }
   }
   /**
@@ -80,16 +87,24 @@ class ConnectionManager extends import_node_events.EventEmitter {
    * Connect to the display
    */
   async connect() {
-    return new Promise((resolve, reject) => {
-      if (this.connected) {
-        return resolve();
-      }
+    if (this.connected) {
+      return;
+    }
+    if (this.connectPromise) {
+      return this.connectPromise;
+    }
+    this.connectPromise = new Promise((resolve, reject) => {
       if (this.config.type === "tcp") {
         this.connectTCP(resolve, reject);
       } else {
         this.connectSerial(resolve, reject);
       }
     });
+    try {
+      await this.connectPromise;
+    } finally {
+      this.connectPromise = void 0;
+    }
   }
   /**
    * Connect via TCP/IP
@@ -176,13 +191,21 @@ class ConnectionManager extends import_node_events.EventEmitter {
     serialClient.on("data", (data) => {
       this.handleData(data);
     });
+    let openFailureHandled = false;
     serialClient.on("error", (error) => {
       this.emit("error", error);
       if (!this.connected) {
         reject(error);
+        if (!openFailureHandled) {
+          openFailureHandled = true;
+          this.handleDisconnect();
+        }
       }
     });
     serialClient.on("close", () => {
+      if (openFailureHandled) {
+        return;
+      }
       this.handleDisconnect();
     });
   }
@@ -237,56 +260,91 @@ class ConnectionManager extends import_node_events.EventEmitter {
    *
    * @param command
    * @param waitForResponse
+   * @param expectedCode - Command code the reply must carry. Replies with any other code are
+   *   ignored rather than resolving this request (see correlation note below).
    */
-  async sendCommand(command, waitForResponse = true) {
+  async sendCommand(command, waitForResponse = true, expectedCode) {
     if (!this.connected || !this.client) {
       throw new Error("Not connected");
     }
     return new Promise((resolve, reject) => {
+      const finish = () => {
+        var _a;
+        if (this.responseTimeout) {
+          this.adapter.clearTimeout(this.responseTimeout);
+          this.responseTimeout = void 0;
+        }
+        (_a = this.pendingRequest) == null ? void 0 : _a.cleanup();
+        this.pendingRequest = void 0;
+      };
       if (waitForResponse) {
         const onResponse = (response) => {
-          if (this.responseTimeout) {
-            this.adapter.clearTimeout(this.responseTimeout);
-            this.responseTimeout = void 0;
+          if (expectedCode !== void 0 && response.commandCode !== expectedCode) {
+            this.log.debug(
+              `Ignoring response 0x${response.commandCode.toString(16)} while waiting for 0x${expectedCode.toString(16)}`
+            );
+            return;
           }
-          this.removeListener("response", onResponse);
+          this.consecutiveTimeouts = 0;
+          finish();
           resolve(response);
         };
-        this.once("response", onResponse);
+        this.on("response", onResponse);
+        this.pendingRequest = {
+          reject,
+          cleanup: () => this.removeListener("response", onResponse)
+        };
         this.responseTimeout = this.adapter.setTimeout(() => {
-          this.log.error("Response timeout! No valid response received within 5000ms");
-          this.log.error(`Current buffer: ${this.buffer.toString("hex")} (${this.buffer.length} bytes)`);
-          this.removeListener("response", onResponse);
+          if (this.consecutiveTimeouts === 0) {
+            this.log.error("Response timeout! No valid response received within 5000ms");
+            this.log.error(`Current buffer: ${this.buffer.toString("hex")} (${this.buffer.length} bytes)`);
+          } else {
+            this.log.debug(
+              `Response timeout (${this.consecutiveTimeouts + 1} consecutive). Buffer: ${this.buffer.toString("hex")} (${this.buffer.length} bytes)`
+            );
+          }
+          this.consecutiveTimeouts++;
+          this.buffer = Buffer.alloc(0);
+          finish();
           reject(new Error("Response timeout"));
         }, 5e3);
       }
       this.log.debug(`Sending command: ${command.toString("hex")} (${command.length} bytes)`);
+      const onWriteComplete = (error) => {
+        if (error) {
+          finish();
+          reject(error);
+        } else if (!waitForResponse) {
+          resolve(null);
+        }
+      };
       if (this.config.type === "tcp") {
-        this.client.write(command, (error) => {
-          if (error) {
-            if (this.responseTimeout) {
-              this.adapter.clearTimeout(this.responseTimeout);
-              this.responseTimeout = void 0;
-            }
-            reject(error);
-          } else if (!waitForResponse) {
-            resolve(null);
-          }
-        });
+        this.client.write(command, onWriteComplete);
       } else {
-        this.client.write(command, (error) => {
-          if (error) {
-            if (this.responseTimeout) {
-              this.adapter.clearTimeout(this.responseTimeout);
-              this.responseTimeout = void 0;
-            }
-            reject(error);
-          } else if (!waitForResponse) {
-            resolve(null);
-          }
-        });
+        this.client.write(command, onWriteComplete);
       }
     });
+  }
+  /**
+   * Reject an in-flight sendCommand so its caller cannot wait forever.
+   *
+   * Disconnecting clears the response timeout, so without this the promise would never settle:
+   * processQueue would stay awaiting it, processingQueue would remain true, and every later poll
+   * cycle would be dropped by the "previous cycle still processing" guard until a restart.
+   *
+   * @param reason - Message for the rejection error
+   */
+  settlePendingRequest(reason) {
+    if (this.responseTimeout) {
+      this.adapter.clearTimeout(this.responseTimeout);
+      this.responseTimeout = void 0;
+    }
+    const pending = this.pendingRequest;
+    this.pendingRequest = void 0;
+    if (pending) {
+      pending.cleanup();
+      pending.reject(new Error(reason));
+    }
   }
   /**
    * Handle disconnection
@@ -294,10 +352,7 @@ class ConnectionManager extends import_node_events.EventEmitter {
   handleDisconnect() {
     const wasConnected = this.connected;
     this.connected = false;
-    if (this.responseTimeout) {
-      this.adapter.clearTimeout(this.responseTimeout);
-      this.responseTimeout = void 0;
-    }
+    this.settlePendingRequest("Connection closed while awaiting response");
     if (wasConnected) {
       this.emit("disconnected");
     }
@@ -325,7 +380,6 @@ class ConnectionManager extends import_node_events.EventEmitter {
         return;
       }
       this.log.debug("Standby poll: checking if display is reachable...");
-      this.reconnectAttempts = 0;
       this.connect().catch(() => {
       });
     }, this.standbyPollInterval);
@@ -352,10 +406,7 @@ class ConnectionManager extends import_node_events.EventEmitter {
       this.adapter.clearTimeout(this.connectTimeout);
       this.connectTimeout = void 0;
     }
-    if (this.responseTimeout) {
-      this.adapter.clearTimeout(this.responseTimeout);
-      this.responseTimeout = void 0;
-    }
+    this.settlePendingRequest("Disconnected while awaiting response");
     if (this.client) {
       if (this.config.type === "tcp") {
         this.client.destroy();

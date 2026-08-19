@@ -191,6 +191,19 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 -->
 ### __WORK IN PROGRESS__
 * (Alan Paris) Replaced the create-adapter placeholder icon with the official iiyama wordmark
+* (Alan Paris) Fixed polling stopping permanently when a Wake-on-LAN power command was not answered
+* (Alan Paris) Fixed the command queue hanging forever when the connection dropped mid-command
+* (Alan Paris) Status replies are now matched to the command that asked for them, so a timed-out poll can no longer write another command's value into a state
+* (Alan Paris) Repeated command failures are now logged once instead of on every poll cycle, and clear `info.connection` after three consecutive failures
+* (Alan Paris) Controls now snap back to the last confirmed value when a command is refused or cannot be delivered
+* (Alan Paris) State metadata is now applied with `extendObject`, so corrected roles reach existing installations on upgrade and not just new ones
+* (Alan Paris) Added `macAddress` to `protectedNative` so it is not readable by non-admin users
+* (Alan Paris) Fixed the connection status staying `true` after a reconnect to a display that answers nothing
+* (Alan Paris) Fixed overlapping reconnect attempts while a display was in standby, which could leave an unclosed socket behind
+* (Alan Paris) Power Save Mode 1/2 no longer reports the display as off when it is already on and reachable
+* (Alan Paris) The "display appears to be off" notice is now logged once per standby period instead of every 30 seconds
+* (Alan Paris) Serial connections now retry after a failed port open, so a dongle plugged in later (or a permissions fix) no longer needs an instance restart
+* (Alan Paris) Repeated connection errors are now logged once instead of on every retry
 
 ### 0.1.4 (2026-07-16)
 * (Alan Paris) Removed the manufacturer protocol PDF from the repository and its git history
