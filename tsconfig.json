@@ -24,9 +24,11 @@
 		// every @types package it can find. This project was relying on that
 		// default to pick up mocha and chai transitively through
 		// @iobroker/testing, so the bump turned the tests' `describe` and `it`
-		// into TS2593. Listing them here, with the packages added as real
-		// devDependencies, means a future change to the base config or to npm's
-		// hoisting cannot take them away again. `iobroker` is in the list because
+		// into TS2593. Listing them here means a future change to the base config
+		// cannot take them away again. The packages themselves come from
+		// @iobroker/testing (6.x declares them as direct dependencies, and the
+		// repochecker flags them as duplicates if listed here too - W0063).
+		// `iobroker` is in the list because
 		// src depends on the global ioBroker namespace (ioBroker.Interval,
 		// ioBroker.StateValue and others).
 		"types": ["node", "iobroker", "mocha", "chai"],

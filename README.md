@@ -189,6 +189,11 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 	Placeholder for the next version (at the beginning of the line):
 	### __WORK IN PROGRESS__
 -->
+### **WORK IN PROGRESS**
+* (Alan Paris) Adapter requires admin >= 7.8.23 now
+* (Alan Paris) Added Node.js 26 to the test matrix
+* (Alan Paris) Updated `@iobroker/adapter-core` to 3.4.3 and `@iobroker/testing` to 6.2.2
+
 ### 0.1.6 (2026-08-19)
 * (Alan Paris) Fixed `protectedNative` being placed inside `common` in io-package.json, where js-controller ignored it and the schema rejected it (repochecker E1105) - the MAC address is now genuinely protected
 
@@ -230,6 +235,8 @@ community project and is not affiliated with, endorsed by, or supported by iiyam
 * (Alan Paris) Power, input source, volume, video and audio control with status polling
 * (Alan Paris) Wake-on-LAN support for Power Save Modes 3 and 4, with subnet-broadcast derivation
 * (Alan Paris) Automatic reconnection with slow standby polling to recover when a display is powered on
+
+[Older changelogs can be found there](CHANGELOG_OLD.md)
 
 ## Trademarks
 
