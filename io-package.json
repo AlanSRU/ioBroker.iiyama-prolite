@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "iiyama-prolite",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "news": {
+      "0.1.7": {
+        "en": "Adapter requires admin >= 7.8.23 now\nAdded Node.js 26 to the test matrix\nUpdated `@iobroker/adapter-core` to 3.4.3 and `@iobroker/testing` to 6.2.2",
+        "de": "Adapter benötigt jetzt admin >= 7.8.23\nNode.js 26 zur Testmatrix hinzugefügt\n@iobroker /adapter-core auf 3.4.3 und @iobroker /testing auf 6.2.2 aktualisiert",
+        "ru": "Для адаптера теперь требуется администратор >= 7.8.23\nДобавлен файл Node.js 26 в тестовую матрицу\nОбновлено «@iobroker /adapter-core» до версии 3.4.3 и «@iobroker /тестирование» до версии 6.2.2",
+        "pt": "Adapter exige admin >= 7.8.23 agora\nAdição do Node.js 26 à matriz\nAtualizou `@iobroker /adapter-core` para 3.4.3 e `@iobroker /testing` para 6.2.2",
+        "nl": "Adapter vereist nu admin >= 7.8.23\nNode.js 26 toegevoegd aan de testmatrix\n`@iobroker /adapter-core` bijgewerkt naar 3.4.3 en `@iobroker /testing` naar 6.2.2",
+        "fr": "Adapter nécessite admin >= 7.8.23\nNode.js 26 a été ajouté à la matrice de test\nMise à jour de @iobroker /adapter-core en 3.4.3 et @iobroker /testing en 6.2.2",
+        "it": "Adapter richiede admin >= 7.8.23 ora\nAggiunto Node.js 26 al test\nAggiornato @iobroker /adapter-core a 3.4.3 e @iobroker /testing a 6.2.2",
+        "es": "El adaptador necesita admin >= 7.8.23 ahora\nAñadió Node.js 26 a la matriz de pruebas\nSe actualizó `@iobroker /adapter-core` a 3.4.3 y `@iobroker /testing` a 6.2.2",
+        "pl": "Adapter wymaga administratora >= 7.8.23 teraz\nDodano Node.js 26 do macierzy testowej\nZaktualizowano `@iobroker /adapter-core „do wersji 3.4.3 i` @iobroker /testing „do 6.2.2",
+        "uk": "Адаптер вимагає адміністратора >= 7.8.23 зараз\nДодано Node.js 26 до тестової матриці\nОновлено `@iobroker /адаптер-ядро` до 3.4.3 і `@iobroker /тестування` до 6.2.2",
+        "zh-cn": "适配器现在需要管理员 >= 7.8.23\n在测试矩阵中添加了 Node.js 26\n将 @iobroker /adapter-core 更新到 3.4.3，将 @iobroker /testing 更新到 6.2.2"
+      },
       "0.1.6": {
         "en": "Fixed `protectedNative` being placed inside `common` in io-package.json, where js-controller ignored it and the schema rejected it (repochecker E1105) - the MAC address is now genuinely protected",
         "de": "Es wurde ein Fehler behoben, durch den `protectedNative` in `common` in io-package.json platziert wurde, wo es vom js-controller ignoriert und vom Schema abgelehnt wurde (Repochecker E1105) – die MAC-Adresse ist nun tatsächlich geschützt.",
@@ -80,19 +93,6 @@
         "pl": "Włączono automatyczne publikowanie npm za pośrednictwem zaufanego publikowania GitHub Actions (OIDC)",
         "uk": "Увімкнено автоматичну публікацію npm через GitHub Actions, довірену публікацію (OIDC).",
         "zh-cn": "已通过 GitHub Actions 可信发布 (OIDC) 启用 npm 自动发布"
-      },
-      "0.1.0": {
-        "en": "Initial release: TCP/IP and serial (RS232) control of iiyama ProLite displays with power, input, volume, video/audio control, status polling and Wake-on-LAN support",
-        "de": "Erstveröffentlichung: TCP/IP- und serielle (RS232)-Steuerung von iiyama ProLite-Displays mit Stromversorgung, Eingang, Lautstärke, Video-/Audiosteuerung, Statusabfrage und Wake-on-LAN-Unterstützung",
-        "ru": "Первоначальная версия: TCP/IP и последовательное (RS232) управление дисплеями iiyama ProLite с управлением питанием, входом, громкостью, видео/аудио, опросом состояния и поддержкой Wake-on-LAN.",
-        "pt": "Versão inicial: controle TCP/IP e serial (RS232) dos monitores iiyama ProLite com alimentação, entrada, volume, controle de vídeo/áudio, pesquisa de status e suporte Wake-on-LAN",
-        "nl": "Eerste release: TCP/IP en seriële (RS232) bediening van iiyama ProLite-schermen met voeding, invoer, volume, video-/audiobediening, status polling en Wake-on-LAN-ondersteuning",
-        "fr": "Version initiale : contrôle TCP/IP et série (RS232) des écrans iiyama ProLite avec alimentation, entrée, volume, contrôle vidéo/audio, interrogation d'état et prise en charge Wake-on-LAN",
-        "it": "Versione iniziale: controllo TCP/IP e seriale (RS232) dei display iiyama ProLite con alimentazione, ingresso, volume, controllo video/audio, polling dello stato e supporto Wake-on-LAN",
-        "es": "Lanzamiento inicial: control TCP/IP y serie (RS232) de pantallas iiyama ProLite con control de alimentación, entrada, volumen, vídeo/audio, sondeo de estado y compatibilidad con Wake-on-LAN.",
-        "pl": "Wersja pierwsza: sterowanie wyświetlaczami iiyama ProLite za pomocą protokołu TCP/IP i portu szeregowego (RS232) z zasilaniem, wejściem, głośnością, sterowaniem wideo/audio, odpytywaniem stanu i obsługą Wake-on-LAN",
-        "uk": "Початковий випуск: TCP/IP і послідовне (RS232) керування дисплеями iiyama ProLite з живленням, вхідним сигналом, гучністю, керуванням відео/аудіо, опитуванням стану та підтримкою Wake-on-LAN",
-        "zh-cn": "初始版本：对 iiyama ProLite 显示器进行 TCP/IP 和串行 (RS232) 控制，具有电源、输入、音量、视频/音频控制、状态轮询和 LAN 唤醒支持"
       }
     },
     "titleLang": {
